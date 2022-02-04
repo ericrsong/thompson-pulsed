@@ -11,8 +11,7 @@ from scipy import signal
 from scipy.optimize import curve_fit
 
 from ..core import traces
-from ..core.parsers import ni_oscilloscope_txt
-
+from ..core.parsers import ni_pci5105
 """
 Define experiment-specific functions
 """
@@ -55,7 +54,7 @@ class Experiment:
         """
         Loads a text file from a single shot into the experiment.
         """
-        self.shots.append(traces.Shot(file, ni_oscilloscope_txt))
+        self.shots.append(traces.Shot(file, ni_pci5105))
             
     def preprocess(self, n_shots = None, load = 'newest'):
         if not self.params:
@@ -111,7 +110,7 @@ class Parameters:
     def __init__(self):
         self.t_run = None
         self.t_bin = None
-        self.t_drive = None
+        self.t_drive =F None~
         self.t_fft_pad = None
         self.f0_cav = None
         self.f0_atom = None
