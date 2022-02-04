@@ -9,7 +9,7 @@ import pandas as pd
 
 __all__ = ['ni_oscilloscope_txt']
 
-def ni_oscilloscope_txt(file):
+def ni_pci5105(file):
     """Uses pandas to load data from a CSV-formatted data file, specifically as
     is formatted for data exported from the pulsed experiment NI PCI-5105
     oscilloscope board via our LabVIEW vi.
@@ -29,9 +29,9 @@ def ni_oscilloscope_txt(file):
     
     return( data, data_names )
 
-def labview_ai_txt(file):
+def ni_pcie7851r_ai(file):
     """Uses pandas to load data from a tab-delimited data file, as generated
-    using the LabVIEW Master.vi used on the strontium pulsed experiment.
+    using the LabVIEW Master.vi for analog inputs from the NI-PCIe7851R board.
 
     Parameters
     ----------
@@ -51,6 +51,6 @@ def labview_ai_txt(file):
     
     # LabVIEW saves t array in units of ms. Convert to SI
     df['t'] *= 10**-3
-    data = df.to_numpy()
+    data = df.T.to_numpy()
     
     return( data, dataset_names )
