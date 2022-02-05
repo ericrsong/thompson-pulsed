@@ -110,7 +110,7 @@ class Parameters:
     def __init__(self):
         self.t_run = None
         self.t_bin = None
-        self.t_drive =F None~
+        self.t_drive = None
         self.t_fft_pad = None
         self.f0_cav = None
         self.f0_atom = None
