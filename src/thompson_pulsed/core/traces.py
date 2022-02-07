@@ -6,6 +6,7 @@ Created on Fri Jan 14 18:45:40 2022
 """
 import numpy as np
 from scipy import signal
+import matplotlib.pyplot as plt
 
 import keyword
 
@@ -36,7 +37,7 @@ class Shot:
             raise
         self.t = data[i_t]
         
-        # Assign other arrays to variable-name attributes as Time Trace objects
+        # Assign other arrays to variable-name attributes as Time Multitrace objects
         for i in range(len(dataset_names)):
             if i == i_t:
                 continue
@@ -45,7 +46,7 @@ class Shot:
                 raise SyntaxError(
                     f'"{dataset_name}" is not a valid variable name.'
                     )
-            vars(self)[dataset_name] = Time_Trace(self.t, data[i])
+            vars(self)[dataset_name] = Time_Multitrace(self.t, data[i])
         
         # Optional: find trigger array and record triggered indices
         self.has_triggers = ('trig' in dataset_names)
@@ -116,7 +117,7 @@ class Time_Multitrace:
         Vf = np.fft.fftshift(Vf_raw, axes=-1)
         return(f, Vf)
     
-    def _get_iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
+    def _get_iq_demod(self, f_demod, filt='butter', order=3, f_cutoff=None):
         """
         Performs an IQ demodulation on the multitrace with frequency f_demod, 
         to package into a Phasor by Time_Multitrace.iq_demod(). See
@@ -146,7 +147,7 @@ class Time_Multitrace:
         multitrace of the form [d1, ..., dk, t], returns a k+2 dimensional
         multitrace of the form [d1, ..., dk, bin, t].
         
-        Returns: Time_Multitrace
+        Returns: class of type self (base class: Time_Multitrace)
         """
         if t_bin < self.dt or t_bin > self.T:
             raise ValueError("Error: t_bin is out of bounds!")
@@ -165,7 +166,7 @@ class Time_Multitrace:
         # Take only time values for first bin
         t = self.t[:n_bin_pts]
         
-        return( MT_Phasor(t, V) )
+        return( type(self)(t, V) )
     
     def fft(self, t_pad=None):
         """
@@ -204,8 +205,9 @@ class Time_Multitrace:
         -------
         Time Multitrace (complex-valued), representing demodulated phasors
         """
-        
-        return( Time_Multitrace(self.t, self._get_iq_demod(f_demod)) )
+        t, V = self.t, self._get_iq_demod(f_demod, filt=filt, order=order, \
+                                          f_cutoff=f_cutoff)
+        return( MT_Phasor(t, V) )
         
 class MT_Phasor(Time_Multitrace):
     def phase(self, unwrap=True):
@@ -228,7 +230,34 @@ class MT_Phase(Time_Multitrace):
         change = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ), 
                                  -np.cumsum(wraps, axis=-1)*2*np.pi), axis = -1)
         self.V += change
+        
+    def frequency(self, t_bin=None):
+        """
+        Calculates a linear regression slope in O(n) time, using a closed-form
+        formula for least-squares that assumes evenly sampled points in time. 
+        
 
+        Parameters
+        ----------
+        t_bin : float, optional
+            Describes how to bin 
+
+        Returns
+        -------
+        slope : np array of floats, shape = self.shape[:-1]
+            Estimated linear slope using a least-squares regression
+        """
+        if t_bin:
+            return( self.bin_trace(t_bin).frequency(t_bin=None) )
+        else:
+            y = self.V
+            n = y.shape[-1]
+            x = np.arange(1, n+1) - (n+1)/2
+            dx = self.dt
+            
+            slope = np.sum(x*y, axis=-1) / ( n*(n**2-1)/12 * dx )
+            return(slope)
+        
 
 class Frequency_Multitrace:
     """
