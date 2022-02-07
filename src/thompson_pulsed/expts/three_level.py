@@ -20,6 +20,9 @@ def sinc(x):
 def sinc_symm(f, f0, A, T):
     return( A*(sinc(np.pi*(f-f0)*T)**2 + sinc(np.pi*(f+f0)*T)**2) )
 def sinc_symm_fitter(T):
+    """
+    Returns a symmetric sinc function, with the sinc width fixed to T.
+    """
     return( lambda f,f0,A: sinc_symm(f,f0,A,T) )
 def cos(t, A, f, phi):
     return( A*np.cos(2*np.pi*f*t + phi) )
@@ -156,7 +159,7 @@ class Data:
                 bin = run[b,...]
                 try:
                     [pOpt, pCov] = curve_fit(
-                            self.params.fit,
+                            self.params.fft_fit,
                             cav_ffts.f, np.abs(bin)**2,
                             p0 = [self.params.f0_cav, 1]
                             )
@@ -192,7 +195,7 @@ class Data:
         
         # plt.figure()
         # for i in range(5):
-        #     trace = traces.Time_Trace(ref_pulse_t[i,...], ref_pulse_V[i,...]) \
+        #     trace = traces.Time_Multitrace(ref_pulse_t[i,...], ref_pulse_V[i,...]) \
         #                     .fft(t_pad = self.params.t_fft_pad)
         #     plt.plot(trace.f, np.abs(trace.V)**2)
         

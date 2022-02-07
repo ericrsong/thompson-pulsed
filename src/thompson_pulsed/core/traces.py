@@ -9,8 +9,8 @@ from scipy import signal
 
 import keyword
 
-__all__ = ['Shot', 'Time_Multitrace', 'Time_Trace', 'Frequency_Multitrace',
-'Frequency_Trace']
+__all__ = ['Shot', 'Time_Multitrace', 'MT_Phasor', 'MT_Phase', 
+           'Frequency_Multitrace']
 
 class Shot:
     """
@@ -99,8 +99,8 @@ class Time_Multitrace:
     
     def _get_fft(self, t_pad=None):
         """
-        Returns Fourier transform information to package into a Trace or
-        Multitrace by the method Time_Trace.fft(). See documentation there.
+        Returns Fourier transform information to package into a Multitrace by
+        the method Time_Multitrace.fft(). See documentation there.
         """
         if t_pad == None:
             t_pad = self.T
@@ -119,7 +119,7 @@ class Time_Multitrace:
     def _get_iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
         """
         Performs an IQ demodulation on the multitrace with frequency f_demod, 
-        to package into a Trace or Multitrace by Time_Trace.iq_demod(). See
+        to package into a Phasor by Time_Multitrace.iq_demod(). See
         documentation there.
         """
         LO_x = np.cos(2*np.pi*f_demod*self.t)
@@ -165,7 +165,7 @@ class Time_Multitrace:
         # Take only time values for first bin
         t = self.t[:n_bin_pts]
         
-        return( Time_Multitrace(t, V) )
+        return( MT_Phasor(t, V) )
     
     def fft(self, t_pad=None):
         """
@@ -206,48 +206,30 @@ class Time_Multitrace:
         """
         
         return( Time_Multitrace(self.t, self._get_iq_demod(f_demod)) )
-    
-class Time_Trace(Time_Multitrace):
-    """
-    Stores information for a single time trace. All arrays assumed to be
-    numpy arrays.
-    """
-    def fft(self, t_pad=None):
-        """
-        Returns a Frequency Trace corresponding to the given time trace.
-        Optionally, allows zero padding of the trace up to t_pad, which allows
-        one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
-        Fourier broadening of the spectrum is still limited by the time length
-        of the original array, as expected of time-frequency uncertainty.
         
-        Returns: Frequency_Trace
-        """
-        f, Vf = self._get_fft(t_pad)
-        return( Frequency_Trace(f, Vf) )
-    
-    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
-        """
-        Performs an IQ demodulation on the trace with frequency f_demod.
+class MT_Phasor(Time_Multitrace):
+    def phase(self, unwrap=True):
+        return( MT_Phase(self.t, np.angle(self.V), unwrap) )
 
-        Parameters
-        ----------
-        f_demod : float
-            frequency to demodulate signal by
-        filt : string, optional
-            Describes which scipy filter to use. The default is 'butter'.
-        order : int, optional
-            Describes which order filter to use. The default is 4.
-        f_cutoff : float, optional
-            Describes the cutoff frequency of the filter. If None, function
-            assumes f_cutoff to be f_demod. The default is None.
-
-        Returns
-        -------
-        Time Trace (complex-valued), representing demodulated phasors
+class MT_Phase(Time_Multitrace):
+    def __init__(self, t, V, unwrap=True):
+        super().__init__(t,V)
+        
+        if unwrap:
+            self._unwrap()
+            
+    def _unwrap(self):
         """
-        
-        return( Time_Trace(self.t, self._get_iq_demod(f_demod)) )
-        
+        Unwrap the phase trace by detecting jumps in phase of larger than
+        pi in a single time step, and correct.
+        """
+        phase = self.V
+        wraps = np.rint( (phase[..., 1:]-phase[..., :-1])/(2*np.pi) )
+        change = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ), 
+                                 -np.cumsum(wraps, axis=-1)*2*np.pi), axis = -1)
+        self.V += change
+
+
 class Frequency_Multitrace:
     """
     Stores information for multiple frequency traces. These multiple traces are
@@ -262,9 +244,3 @@ class Frequency_Multitrace:
         self.df = f[1]-f[0]
         self.F = f[-1]-f[0] + self.df
         self.dim = len(self.V.shape)
-        
-class Frequency_Trace(Frequency_Multitrace):
-    """
-    Stores information for a single frequency trace. All arrays assumed to be
-    numpy arrays.
-    """
