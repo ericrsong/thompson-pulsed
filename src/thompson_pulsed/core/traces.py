@@ -236,7 +236,6 @@ class MT_Phase(Time_Multitrace):
         Calculates a linear regression slope in O(n) time, using a closed-form
         formula for least-squares that assumes evenly sampled points in time. 
         
-
         Parameters
         ----------
         t_bin : float, optional
@@ -244,8 +243,8 @@ class MT_Phase(Time_Multitrace):
 
         Returns
         -------
-        slope : np array of floats, shape = self.shape[:-1]
-            Estimated linear slope using a least-squares regression
+        freqs : np array of floats, shape = self.V.shape[:-1]
+            Estimated frequencies of Phase traces, expressed in Hz (cycles/sec)
         """
         if t_bin:
             return( self.bin_trace(t_bin).frequency(t_bin=None) )
@@ -255,8 +254,8 @@ class MT_Phase(Time_Multitrace):
             x = np.arange(1, n+1) - (n+1)/2
             dx = self.dt
             
-            slope = np.sum(x*y, axis=-1) / ( n*(n**2-1)/12 * dx )
-            return(slope)
+            freqs = np.sum(x*y, axis=-1) / ( n*(n**2-1)/12 * dx ) * 1/(2*np.pi)
+            return(freqs)
         
 
 class Frequency_Multitrace:

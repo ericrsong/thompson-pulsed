@@ -7,7 +7,7 @@ Created on Tue Jan 25 17:49:15 2022
 import numpy as np
 import pandas as pd
 
-__all__ = ['ni_oscilloscope_txt']
+__all__ = ['ni_pci5105', 'ni_pcie7851r_ai']
 
 def ni_pci5105(file):
     """Uses pandas to load data from a CSV-formatted data file, specifically as

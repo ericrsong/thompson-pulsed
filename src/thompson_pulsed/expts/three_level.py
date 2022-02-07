@@ -175,18 +175,21 @@ class Data:
                 print(f"Run {r+1} of {cav_ffts.V.shape[0]} processed.")
         return( bin_times, cav_freqs )
     
-    def track_cav_frequency_iq(self):
+    def track_cav_frequency_iq(self, f_demod = None):
         """
-        Bins cavity time traces and fits the FFT of these bins to measure a
-        cavity resonance frequency. Multiple shots give statistics on these
-        bins.
+        IQ demodulates cavity time traces, bins them, and fits their phase(t)
+        with a linear regression to estimate instantaneous frequency. Multiple
+        shots give statistics on these bins.
         
         Returns: bin_times (1D np array), cav_freqs (2D np array [run,bin])
         """
+        if not f_demod:
+            f_demod = self.params.f0_cav
+            
         # Bin cavity run traces, subtract mean from each bin, and demodulate
         cav_runs = self.cav_runs
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
-        cav_phase = cav_runs.iq_demod(self.params.f0_cav).phase()
+        cav_phase = cav_runs.iq_demod(f_demod).phase()
         cav_bins = cav_phase.bin_trace(self.params.t_bin)
                                 
         # Get bin times
