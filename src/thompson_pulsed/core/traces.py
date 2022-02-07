@@ -5,6 +5,8 @@ Created on Fri Jan 14 18:45:40 2022
 @author: dylan
 """
 import numpy as np
+from scipy import signal
+
 import keyword
 
 __all__ = ['Shot', 'Time_Multitrace', 'Time_Trace', 'Frequency_Multitrace',
@@ -113,6 +115,29 @@ class Time_Multitrace:
         f = np.fft.fftshift(f_raw, axes=-1)
         Vf = np.fft.fftshift(Vf_raw, axes=-1)
         return(f, Vf)
+    
+    def _get_iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
+        """
+        Performs an IQ demodulation on the multitrace with frequency f_demod, 
+        to package into a Trace or Multitrace by Time_Trace.iq_demod(). See
+        documentation there.
+        """
+        LO_x = np.cos(2*np.pi*f_demod*self.t)
+        LO_y = np.sin(2*np.pi*f_demod*self.t)
+        
+        # Generate 4th order Butterworth filter with cutoff at demod frequency
+        if not f_cutoff:
+            f_cutoff = f_demod
+        f_nyquist = 1/(2 * self.dt)
+        wn = f_cutoff / f_nyquist
+        n = order
+        # TODO: give option to use different filter
+        b,a = signal.butter(n, wn)
+        
+        V_x = signal.filtfilt(b,a, self.V*LO_x)
+        V_y = signal.filtfilt(b,a, self.V*LO_y)
+        
+        return(V_x + 1j* V_y)
 
     def bin_trace(self, t_bin):
         """
@@ -155,6 +180,33 @@ class Time_Multitrace:
         f, Vf = self._get_fft(t_pad)
         return( Frequency_Multitrace(f, Vf) )
     
+    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
+        """
+        Performs an IQ demodulation on the multitrace with frequency f_demod.
+        The scipy function filtfilt applies the given filter in the forward-
+        time direction once, then applies it again in the backwards-time
+        direction. This ensures the next applied filter has no net phase delay
+        at the expense of preserving causality.
+
+        Parameters
+        ----------
+        f_demod : float
+            frequency to demodulate signal by
+        filt : string, optional
+            Describes which scipy filter to use. The default is 'butter'.
+        order : int, optional
+            Describes which order filter to use. The default is 4.
+        f_cutoff : float, optional
+            Describes the cutoff frequency of the filter. If None, function
+            assumes f_cutoff to be f_demod. The default is None.
+
+        Returns
+        -------
+        Time Multitrace (complex-valued), representing demodulated phasors
+        """
+        
+        return( Time_Multitrace(self.t, self._get_iq_demod(f_demod)) )
+    
 class Time_Trace(Time_Multitrace):
     """
     Stores information for a single time trace. All arrays assumed to be
@@ -172,6 +224,29 @@ class Time_Trace(Time_Multitrace):
         """
         f, Vf = self._get_fft(t_pad)
         return( Frequency_Trace(f, Vf) )
+    
+    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
+        """
+        Performs an IQ demodulation on the trace with frequency f_demod.
+
+        Parameters
+        ----------
+        f_demod : float
+            frequency to demodulate signal by
+        filt : string, optional
+            Describes which scipy filter to use. The default is 'butter'.
+        order : int, optional
+            Describes which order filter to use. The default is 4.
+        f_cutoff : float, optional
+            Describes the cutoff frequency of the filter. If None, function
+            assumes f_cutoff to be f_demod. The default is None.
+
+        Returns
+        -------
+        Time Trace (complex-valued), representing demodulated phasors
+        """
+        
+        return( Time_Trace(self.t, self._get_iq_demod(f_demod)) )
         
 class Frequency_Multitrace:
     """
