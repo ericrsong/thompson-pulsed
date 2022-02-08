@@ -62,6 +62,9 @@ for i in range(n_shots):
 
 expt.preprocess()
 
+"""
+Cavity resonance frequency probe
+"""
 bin_times, cav_freqs = expt.data.track_cav_frequency_iq()
 cav_freqs_mean = np.mean(cav_freqs, axis=0)
 cav_freqs_stdmean = np.std(cav_freqs, axis=0) / np.sqrt(cav_freqs.shape[0])
@@ -72,6 +75,24 @@ plt.errorbar(bin_times, cav_freqs_mean, cav_freqs_stdmean)
 plt.figure()
 for atom_run in expt.data.atom_runs.V[:10, ...]:
     plt.plot(expt.data.atom_runs.t, atom_run)
+    
+"""
+Atomic self-radiated field probe
+"""
+atom_demod = expt.data.demod_atom_trace()
+
+plt.figure()
+for run in atom_demod.V[:10]:
+    plt.plot(atom_demod.t, run)
+
+atom_demod_fft = atom_demod.fft()
+plt.figure()
+for i in range(10):
+    plt.plot(atom_demod_fft.f, np.abs(atom_demod_fft.V[i,...])**2)
+
+plt.figure()
+plt.plot(atom_demod.t, np.mean(atom_demod.V[:25,...], axis=0))
+
 
 # TESTING ONLY: Remove package from path when done
 sys.path.remove('../src')

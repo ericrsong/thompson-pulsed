@@ -9,8 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Created a changelog (this document!) roughly adhering to the standards specified in [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-- Added parsing functions for ni_pcie7851r_ai, and renamed existing parsing functions for unique identification.
+- A changelog (this document!) roughly adhering to the standards specified in [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+- Parsing functions for ni_pcie7851r_ai
+- Three_level experiment test scripts and instructions for how to run them
+- Digital IQ demodulation capabilities for Time_Multitrace
+- MT_Phasor and MT_Phase classes (inheriting methods from Time_Multitrace)
+
+### Changed
+- Parsing function names changed to give unique identification
+- Default cavity resonance probe measurement uses an IQ demodulation strategy, as opposed to an FFT + curve fit
+
+### Removed
+- Time_Trace and Frequency_Trace (instead use Time_Multitrace and Frequency_Multitrace)
 
 ## [0.1.0] - 2022-02-01
 
