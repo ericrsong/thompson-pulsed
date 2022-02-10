@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-02-07
+
 ### Added
 
 - A changelog (this document!) roughly adhering to the standards specified in [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
@@ -37,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser module in /core/ containing a single parsing function for the NI PCI-5105 oscilloscope board
 - Experiment-specific analysis code for the 3L experiment, stored in /expts/three_level.py
 
-[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.0.0...v0.1.0
 [0.0.0]: https://github.com/dylan-j-young/thompson-pulsed/tree/v0.0.0

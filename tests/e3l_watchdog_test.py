@@ -5,10 +5,14 @@ Created on Mon Feb  7 12:28:42 2022
 @author: dylan
 
 This is an example watchdog script for the three_level experiment.
+Here, we look for new files from the NI PCI-5105 board. We load the
+newest known-readable file and try to fit an exponential decay to the
+cavity resonance frequency, plotting the result in real time.
 """
 # TESTING ONLY: Adds the local package temporarily to the path for testing
 import sys
 sys.path.insert(0, '../src')
+
 
 import numpy as np
 import matplotlib.pyplot as plt
