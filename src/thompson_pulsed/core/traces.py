@@ -75,7 +75,7 @@ class Shot:
         
         triggers = np.where( (self.trig.V[1:] > trig_level) & \
                             (self.trig.V[:-1] < trig_level) )[0]
-        if np.min(triggers[1:]-triggers[:-1]) < trig_min_spacing / self.trig.dt:
+        if triggers.size > 1 and np.min(triggers[1:]-triggers[:-1]) < trig_min_spacing / self.trig.dt:
             raise Exception(
                 'Two triggers closer than 1 us detected. Possible bad triggers.'
                 )
@@ -89,8 +89,10 @@ class Time_Multitrace:
     the LAST index corresponds to time.
     """
     def __init__(self, t, V):
-        self.t = t
-        self.V = V
+        # Check shape agreement and assign to object
+        min_time_shape = min( t.shape[0], V.shape[-1] )
+        self.t = t[:min_time_shape]
+        self.V = V[..., :min_time_shape]
         
         # Extract time parameters
         self.t0 = t[0]

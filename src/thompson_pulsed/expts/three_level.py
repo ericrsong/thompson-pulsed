@@ -88,16 +88,16 @@ class Experiment:
         for shot in shots:
             if not shot.has_triggers:
                 # Assume a single run for each shot and extract points
-                shot_atom_runs = shot.atom.V[:i_run]
-                shot_cav_runs = shot.cav.V[:i_run]
-            
-            # Extract runs from the single shot using triggers as markers
-            shot_atom_runs = np.array(
-                [shot.atom.V[trig:trig+i_run] for trig in shot.triggers]
-                )
-            shot_cav_runs = np.array(
-                [shot.cav.V[trig:trig+i_run] for trig in shot.triggers]
-                )
+                shot_atom_runs = np.array([shot.atom.V[:i_run]])
+                shot_cav_runs = np.array([shot.cav.V[:i_run]])
+            else:
+                # Extract runs from the single shot using triggers as markers
+                shot_atom_runs = np.array(
+                    [shot.atom.V[trig:trig+i_run] for trig in shot.triggers]
+                    )
+                shot_cav_runs = np.array(
+                    [shot.cav.V[trig:trig+i_run] for trig in shot.triggers]
+                    )
             if atom_runs.size > 0:
                 atom_runs = np.concatenate((atom_runs, shot_atom_runs))
                 cav_runs = np.concatenate((cav_runs, shot_cav_runs))
