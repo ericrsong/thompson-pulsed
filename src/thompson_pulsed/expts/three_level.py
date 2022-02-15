@@ -136,13 +136,27 @@ class Data:
         self.atom_runs = None
         self.params = None
     
-    def track_cav_frequency(self):
+    def track_cav_frequency(self, out_fmt='MT'):
         """
+        DEPRECATED METHOD (slower than track_cav_frequency_iq):
         Bins cavity time traces and fits the FFT of these bins to measure a
         cavity resonance frequency. Multiple shots give statistics on these
         bins.
         
-        Returns: bin_times (1D np array), cav_freqs (2D np array [run,bin])
+        Parameters
+        ----------
+        out_fmt : str, optional
+            Specifies what format the data is outputted in. All methods other than
+            the default are deprecated.
+            'trace' : returns t, V as two separate np arrays
+            'MT' : returns t, V as a single tp.Time_Multitrace (see below)
+            Default is 'MT'
+                    
+        Returns
+        -------
+        cav_freqs : tp.Time_Multitrace
+            .t : 1D np array [bin]
+            .V : 2D np array [run,bin]
         """
         # Bin cavity run traces, subtract mean from each bin, and do an FFT
         cav_bins = self.cav_runs.bin_trace(self.params.t_bin)
@@ -152,7 +166,7 @@ class Data:
         # Get bin times
         bin_times = self.params.t_bin * (0.5 + np.arange(cav_ffts.V.shape[1]))
         
-        cav_freqs = np.zeros(cav_ffts.V.shape[:-1])
+        cav_freq_vals = np.zeros(cav_ffts.V.shape[:-1])
         for r in range(cav_ffts.V.shape[0]):
             run = cav_ffts.V[r,...]
             for b in range(run.shape[0]):
@@ -163,25 +177,50 @@ class Data:
                             cav_ffts.f, np.abs(bin)**2,
                             p0 = [self.params.f0_cav, 1]
                             )
-                    cav_freqs[r,b] = np.abs(pOpt[0])
+                    cav_freq_vals[r,b] = np.abs(pOpt[0])
                 except RuntimeError:
                     # print('Fit ' + str(bin+1) + ' of ' + str(n_bins) + ' failed.')
                     # plt.figure()
                     # plt.plot(fs, np.abs(Vfs[bin,:])**2)
                     
                     # Set fitted frequency to a random value below the Nyquist frequency
-                    cav_freqs[r,b] = np.random.uniform(low=0, high=np.max(cav_ffts.f))
+                    cav_freq_vals[r,b] = np.random.uniform(low=0, high=np.max(cav_ffts.f))
             if (r+1) % 10 == 0:
                 print(f"Run {r+1} of {cav_ffts.V.shape[0]} processed.")
-        return( bin_times, cav_freqs )
+
+        # Choose output format
+        if out_fmt == 'array':
+            # Deprecated: try returning multitrace (MT)
+            return( bin_times, cav_freq_vals )
+        elif out_fmt == 'MT':
+            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
+        else:
+            # Default: return MT
+            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
     
-    def track_cav_frequency_iq(self, f_demod = None):
+    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT'):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
         shots give statistics on these bins.
         
-        Returns: bin_times (1D np array), cav_freqs (2D np array [run,bin])
+        Parameters
+        ----------
+        f_demod : float, optional
+            Specifies what frequency to demodulate at. If None, f_demod is auto-set
+            to self.params.f0_cav. The default is None.
+        out_fmt : str, optional
+            Specifies what format the data is outputted in. All methods other than
+            the default are deprecated.
+            'trace' : returns t, V as two separate np arrays
+            'MT' : returns t, V as a single tp.Time_Multitrace (see below)
+            Default is 'MT'
+
+        Returns
+        -------
+        cav_freqs : tp.Time_Multitrace
+            .t : 1D np array [bin]
+            .V : 2D np array [run,bin]
         """
         if not f_demod:
             f_demod = self.params.f0_cav
@@ -196,8 +235,17 @@ class Data:
         bin_times = self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[1]))
         
         # Estimate cavity frequency in bins using linear regression
-        cav_freqs = cav_bins.frequency()
-        return( bin_times, cav_freqs )
+        cav_freq_vals = cav_bins.frequency()
+        
+        # Choose output format
+        if out_fmt == 'array':
+            # Deprecated: try returning multitrace (MT)
+            return( bin_times, cav_freq_vals )
+        elif out_fmt == 'MT':
+            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
+        else:
+            # Default: return MT
+            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
     
     def demod_atom_trace(self):
         """

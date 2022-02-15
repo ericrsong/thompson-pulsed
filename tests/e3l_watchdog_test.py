@@ -130,12 +130,12 @@ def watch_dir(path='.', keep_files=True):
                 
                 # Process enough data to display demodulated atom trace
                 expt.preprocess(n_shots = 1, load = 'newest')
-                bin_times, cav_freqs = expt.data.track_cav_frequency_iq()
-                cav_freqs_mean = np.mean(cav_freqs, axis=0)
-                cav_freqs_stdmean = np.std(cav_freqs, axis=0) / np.sqrt(cav_freqs.shape[0])
+                cav_freqs = expt.data.track_cav_frequency_iq()
+                cav_freqs_mean = np.mean(cav_freqs.V, axis=0)
+                cav_freqs_stdmean = np.std(cav_freqs.V, axis=0) / np.sqrt(cav_freqs.V.shape[0])
                 
                 [pOpt, pCov] = curve_fit(fit,
-                                         bin_times, cav_freqs_mean,
+                                         cav_freqs.t, cav_freqs_mean,
                                          sigma = cav_freqs_stdmean,
                                          p0=[1,0], 
                                          bounds=([0,-500e3],[np.inf, 500e3])               
@@ -144,11 +144,11 @@ def watch_dir(path='.', keep_files=True):
                 # Update plot with new trace
                 if not cav_probe:
                     # No plot yet. Create one
-                    cav_probe = ax.errorbar(bin_times * 1e6, cav_freqs_mean * 1e-3,
+                    cav_probe = ax.errorbar(cav_freqs.t * 1e6, cav_freqs_mean * 1e-3,
                                             cav_freqs_stdmean * 1e-3,
                                             fmt='ok', alpha=0.2)
-                    cav_fit = ax.plot(bin_times * 1e6,
-                                      fit(bin_times, *pOpt) * 1e-3, 'k',
+                    cav_fit = ax.plot(cav_freqs.t * 1e6,
+                                      fit(cav_freqs.t, *pOpt) * 1e-3, 'k',
                                       label=f'f0 = {round(pOpt[0]*1e-3)} +/- {round(np.sqrt(pCov[0,0])*1e-3)} kHz')
                     ax.set(xlabel=r'Time ($\mu s$)', ylabel=r'Frequency (kHz)')
                     ax.legend(loc='upper right')
@@ -158,11 +158,11 @@ def watch_dir(path='.', keep_files=True):
                         line.remove()
                     for line in cav_probe[2]:
                         line.remove()
-                    cav_probe = ax.errorbar(bin_times * 1e6, cav_freqs_mean * 1e-3, 
+                    cav_probe = ax.errorbar(cav_freqs.t * 1e6, cav_freqs_mean * 1e-3, 
                                             cav_freqs_stdmean * 1e-3,
                                             fmt='ok', alpha=0.2)
-                    cav_fit[0].set(xdata=bin_times * 1e6,
-                                   ydata=fit(bin_times, *pOpt) * 1e-3,
+                    cav_fit[0].set(xdata=cav_freqs.t * 1e6,
+                                   ydata=fit(cav_freqs.t, *pOpt) * 1e-3,
                                    label=f'f0 = {round(pOpt[0]*1e-3)} +/- {round(np.sqrt(pCov[0,0])*1e-3)} kHz')
                     ax.legend(loc='upper right')
                     

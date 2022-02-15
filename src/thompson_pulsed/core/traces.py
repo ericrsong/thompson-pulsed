@@ -88,59 +88,35 @@ class Time_Multitrace:
     assumed to be packed in a single numpy array of arbitrary dimension, where
     the LAST index corresponds to time.
     """
-    def __init__(self, t, V):
+    def __init__(self, t, V, dV=None):
+        """
+        Initializes a Time_Multitrace object.
+
+        Parameters
+        ----------
+        t : 1D np array
+            time points for data.
+        V : np array [..., t]
+            data points of arbitrary (d>=1) dimension. axis -1 corresponds to time.
+        dV : np array, shape = self.V.shape, optional
+            uncertainties for self.V. If None, assume no uncertainties. Default
+            is None.
+
+        Returns
+        -------
+        None.
+        """
         # Check shape agreement and assign to object
         min_time_shape = min( t.shape[0], V.shape[-1] )
         self.t = t[:min_time_shape]
         self.V = V[..., :min_time_shape]
+        self.dV = dV[..., :min_time_shape] if dV else None
         
         # Extract time parameters
         self.t0 = t[0]
         self.dt = t[1]-t[0]
         self.T = t[-1]-t[0] + self.dt
         self.dim = len(self.V.shape)
-    
-    def _get_fft(self, t_pad=None):
-        """
-        Returns Fourier transform information to package into a Multitrace by
-        the method Time_Multitrace.fft(). See documentation there.
-        """
-        if t_pad == None:
-            t_pad = self.T
-        
-        pad_pts = round(t_pad / self.dt)
-        pad_tuple = ((0,0),) * (self.dim-1) + ((0, pad_pts-self.t.size),)
-        V_pad = np.pad(self.V, pad_tuple )
-        
-        f_raw = np.fft.fftfreq(pad_pts, d=self.dt)
-        Vf_raw = np.fft.fft(V_pad)
-        
-        f = np.fft.fftshift(f_raw, axes=-1)
-        Vf = np.fft.fftshift(Vf_raw, axes=-1)
-        return(f, Vf)
-    
-    def _get_iq_demod(self, f_demod, filt='butter', order=3, f_cutoff=None):
-        """
-        Performs an IQ demodulation on the multitrace with frequency f_demod, 
-        to package into a Phasor by Time_Multitrace.iq_demod(). See
-        documentation there.
-        """
-        LO_x = np.cos(2*np.pi*f_demod*self.t)
-        LO_y = np.sin(2*np.pi*f_demod*self.t)
-        
-        # Generate 4th order Butterworth filter with cutoff at demod frequency
-        if not f_cutoff:
-            f_cutoff = f_demod
-        f_nyquist = 1/(2 * self.dt)
-        wn = f_cutoff / f_nyquist
-        n = order
-        # TODO: give option to use different filter
-        b,a = signal.butter(n, wn)
-        
-        V_x = signal.filtfilt(b,a, self.V*LO_x)
-        V_y = signal.filtfilt(b,a, self.V*LO_y)
-        
-        return(V_x + 1j* V_y)
 
     def bin_trace(self, t_bin):
         """
@@ -149,7 +125,14 @@ class Time_Multitrace:
         multitrace of the form [d1, ..., dk, t], returns a k+2 dimensional
         multitrace of the form [d1, ..., dk, bin, t].
         
-        Returns: class of type self (base class: Time_Multitrace)
+        Parameters
+        ----------
+        t_bin : float
+            Binning time in units of self.t
+
+        Returns
+        -------
+        Class of type self (base class: Time_Multitrace)
         """
         if t_bin < self.dt or t_bin > self.T:
             raise ValueError("Error: t_bin is out of bounds!")
@@ -178,9 +161,29 @@ class Time_Multitrace:
         Fourier broadening of the spectrum is still limited by the time length
         of the original array, as expected of time-frequency uncertainty.
         
-        Returns: Frequency_Multitrace
+        Parameters
+        ----------
+        t_pad : float, optional
+            Pad time in units of self.t. If None, no padding is performed.
+            Default is None.
+
+        Returns
+        -------
+        Frequency_Multitrace
         """
-        f, Vf = self._get_fft(t_pad)
+        if t_pad == None:
+            t_pad = self.T
+        
+        pad_pts = round(t_pad / self.dt)
+        pad_tuple = ((0,0),) * (self.dim-1) + ((0, pad_pts-self.t.size),)
+        V_pad = np.pad(self.V, pad_tuple )
+        
+        f_raw = np.fft.fftfreq(pad_pts, d=self.dt)
+        Vf_raw = np.fft.fft(V_pad)
+        
+        f = np.fft.fftshift(f_raw, axes=-1)
+        Vf = np.fft.fftshift(Vf_raw, axes=-1)
+
         return( Frequency_Multitrace(f, Vf) )
     
     def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
@@ -205,27 +208,90 @@ class Time_Multitrace:
 
         Returns
         -------
-        Time Multitrace (complex-valued), representing demodulated phasors
+        MT_Phasor(Time_Multitrace), representing demodulated phasors
         """
-        t, V = self.t, self._get_iq_demod(f_demod, filt=filt, order=order, \
-                                          f_cutoff=f_cutoff)
-        return( MT_Phasor(t, V) )
+        LO_x = np.cos(2*np.pi*f_demod*self.t)
+        LO_y = np.sin(2*np.pi*f_demod*self.t)
+        
+        # Generate 4th order Butterworth filter with cutoff at demod frequency
+        if not f_cutoff:
+            f_cutoff = f_demod
+        f_nyquist = 1/(2 * self.dt)
+        wn = f_cutoff / f_nyquist
+        n = order
+        # TODO: give option to use different filter
+        b,a = signal.butter(n, wn)
+        
+        V_x = signal.filtfilt(b,a, self.V*LO_x)
+        V_y = signal.filtfilt(b,a, self.V*LO_y)
+
+        return( MT_Phasor(self.t, V_x + 1j * V_y) )
+    
+    def moving_average(self, t_avg):
+        """
+        Assuming an evenly-spaced array, performs a moving average with window
+        t_avg.
+
+        Parameters
+        ----------
+        t_avg : float
+            Time window for moving average. Units the same as self.t
+
+        Returns
+        -------
+        Time_Multitrace, representing a moving average of self
+        """
+        # Determine number of points to average within t_avg
+        k = int(t_avg/self.dt)
+        if k < 1 or k > self.t.size:
+            return( self )
+        
+        # Generate moving average
+        V_sum = np.cumsum(self.V, dtype=float, axis=-1)
+        V_sum[..., k:] = V_sum[..., k:] - V_sum[..., :-k]
+        shift = int((k-1)/2)
+        
+        # Truncate first k-1 points because they are not part of the avg
+        V_avg_trunc = V_sum[..., k-1:]/k
+        
+        # Pad arrays with endpoint values to maintain shapes
+        pad_width_V = ((0,0),) * (V_avg_trunc.ndim-1) + ((shift, k-shift-1),)
+        V_avg = np.pad(V_avg_trunc, pad_width_V, mode='edge')
+        
+        return( Time_Multitrace(self.t, V_avg) )
         
 class MT_Phasor(Time_Multitrace):
     def phase(self, unwrap=True):
+        """
+        Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
+        phases.
+        
+        Parameters
+        ----------
+        unwrap : bool, optional
+            Describes whether or not to unwrap the phases.
+
+        Returns
+        -------
+        MT_Phase(Time_Multitrace) with same shape as self
+        """
         return( MT_Phase(self.t, np.angle(self.V), unwrap) )
 
 class MT_Phase(Time_Multitrace):
-    def __init__(self, t, V, unwrap=True):
-        super().__init__(t,V)
+    def __init__(self, t, V, dV=None, unwrap=True):
+        super().__init__(t,V,dV)
         
         if unwrap:
             self._unwrap()
             
     def _unwrap(self):
         """
-        Unwrap the phase trace by detecting jumps in phase of larger than
+        Unwraps the phase trace by detecting jumps in phase of larger than
         pi in a single time step, and correct.
+
+        Returns
+        -------
+        None.
         """
         phase = self.V
         wraps = np.rint( (phase[..., 1:]-phase[..., :-1])/(2*np.pi) )
@@ -258,7 +324,6 @@ class MT_Phase(Time_Multitrace):
             
             freqs = np.sum(x*y, axis=-1) / ( n*(n**2-1)/12 * dx ) * 1/(2*np.pi)
             return(freqs)
-        
 
 class Frequency_Multitrace:
     """

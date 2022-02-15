@@ -65,12 +65,12 @@ expt.preprocess()
 """
 Cavity resonance frequency probe
 """
-bin_times, cav_freqs = expt.data.track_cav_frequency_iq()
-cav_freqs_mean = np.mean(cav_freqs, axis=0)
-cav_freqs_stdmean = np.std(cav_freqs, axis=0) / np.sqrt(cav_freqs.shape[0])
+cav_freqs = expt.data.track_cav_frequency_iq()
+cav_freqs_mean = np.mean(cav_freqs.V, axis=0)
+cav_freqs_stdmean = np.std(cav_freqs.V, axis=0) / np.sqrt(cav_freqs.V.shape[0])
 
 plt.figure()
-plt.errorbar(bin_times, cav_freqs_mean, cav_freqs_stdmean)
+plt.errorbar(cav_freqs.t, cav_freqs_mean, cav_freqs_stdmean)
 
 plt.figure()
 for atom_run in expt.data.atom_runs.V[:10, ...]:
