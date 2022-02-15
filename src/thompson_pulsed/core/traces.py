@@ -108,9 +108,11 @@ class Time_Multitrace:
         """
         # Check shape agreement and assign to object
         min_time_shape = min( t.shape[0], V.shape[-1] )
+        if dV is not None:
+            assert V.shape == dV.shape
         self.t = t[:min_time_shape]
         self.V = V[..., :min_time_shape]
-        self.dV = dV[..., :min_time_shape] if dV else None
+        self.dV = dV[..., :min_time_shape] if (dV is not None) else None
         
         # Extract time parameters
         self.t0 = t[0]
@@ -227,7 +229,7 @@ class Time_Multitrace:
 
         return( MT_Phasor(self.t, V_x + 1j * V_y) )
     
-    def moving_average(self, t_avg):
+    def moving_average(self, t_avg, use_weights=True):
         """
         Assuming an evenly-spaced array, performs a moving average with window
         t_avg.
@@ -236,6 +238,10 @@ class Time_Multitrace:
         ----------
         t_avg : float
             Time window for moving average. Units the same as self.t
+        use_weights: bool, optional
+            Determines whether or not to weight data points when averaging.
+            If True, attempts to define w = 1/dV**2 and otherwise uses equal
+            weighting. If False, uses equal weighting. Default is True.
 
         Returns
         -------
@@ -246,19 +252,26 @@ class Time_Multitrace:
         if k < 1 or k > self.t.size:
             return( self )
         
+        # Generate weights for average. If no errors exist, use equal weights
+        w = (1/self.dV**2) if (self.dV is not None and use_weights) else (1 + 0*self.V)
+        
         # Generate moving average
-        V_sum = np.cumsum(self.V, dtype=float, axis=-1)
+        V_sum = np.cumsum(self.V * w, dtype=float, axis=-1)
         V_sum[..., k:] = V_sum[..., k:] - V_sum[..., :-k]
+        w_sum = np.cumsum(w, dtype=float, axis=-1)
+        w_sum[..., k:] = w_sum[..., k:] - w_sum[..., :-k]
         shift = int((k-1)/2)
         
-        # Truncate first k-1 points because they are not part of the avg
-        V_avg_trunc = V_sum[..., k-1:]/k
+        # Normalize, then truncate the first k-1 points as they are not part of the average
+        V_avg_trunc = V_sum[..., k-1:] / w_sum[..., k-1:]
+        w_trunc = w_sum[..., k-1:]
         
         # Pad arrays with endpoint values to maintain shapes
         pad_width_V = ((0,0),) * (V_avg_trunc.ndim-1) + ((shift, k-shift-1),)
         V_avg = np.pad(V_avg_trunc, pad_width_V, mode='edge')
+        dV_avg = np.pad(1/np.sqrt(w_trunc), pad_width_V, mode='edge')
         
-        return( Time_Multitrace(self.t, V_avg) )
+        return( Time_Multitrace(self.t, V_avg, dV=dV_avg) )
         
 class MT_Phasor(Time_Multitrace):
     def phase(self, unwrap=True):
@@ -275,7 +288,7 @@ class MT_Phasor(Time_Multitrace):
         -------
         MT_Phase(Time_Multitrace) with same shape as self
         """
-        return( MT_Phase(self.t, np.angle(self.V), unwrap) )
+        return( MT_Phase(self.t, np.angle(self.V), unwrap=unwrap) )
 
 class MT_Phase(Time_Multitrace):
     def __init__(self, t, V, dV=None, unwrap=True):
