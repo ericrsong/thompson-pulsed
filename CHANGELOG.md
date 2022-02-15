@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2022-02-14
+
+### Added
+- Watchdog example script for three_level
+- A moving average function for Time_Multitrace
+- Uncertainty handling for Time_Multitrace
+
+### Changed
+- Time_Multitrace method code no longer calls nearly identical helper functions
+- Time_Multitrace time/dim attributes are read-only properties
+
+### Deprecated
+- three_level.py Experiment.track_cav_frequnecy methods no longer output as separate t, V arrays by default. Instead, they will by default output a Time_Multitrace(t,V) object
+
+### Fixed
+- three_level.py Experiments can now load Shots with 0 or 1 triggers properly
+
 ## [0.2.0] - 2022-02-07
 
 ### Added
@@ -39,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser module in /core/ containing a single parsing function for the NI PCI-5105 oscilloscope board
 - Experiment-specific analysis code for the 3L experiment, stored in /expts/three_level.py
 
-[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.0.0...v0.1.0
 [0.0.0]: https://github.com/dylan-j-young/thompson-pulsed/tree/v0.0.0
