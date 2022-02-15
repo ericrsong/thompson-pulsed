@@ -113,12 +113,26 @@ class Time_Multitrace:
         self.t = t[:min_time_shape]
         self.V = V[..., :min_time_shape]
         self.dV = dV[..., :min_time_shape] if (dV is not None) else None
-        
-        # Extract time parameters
-        self.t0 = t[0]
-        self.dt = t[1]-t[0]
-        self.T = t[-1]-t[0] + self.dt
-        self.dim = len(self.V.shape)
+
+    """
+    t0, dt, T, dim are getter functions that read out values from self.t, self.V
+    """
+    @property
+    def t0(self):
+        return self.t[0]
+
+    @property
+    def dt(self):
+        return self.t[1]-self.t[0]
+
+    @property
+    def T(self):
+        return self.t[-1]-self.t[0] + self.dt
+
+    @property
+    def dim(self):
+        return len(self.V.shape)
+    
 
     def bin_trace(self, t_bin):
         """
