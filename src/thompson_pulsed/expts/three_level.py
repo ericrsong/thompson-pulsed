@@ -198,7 +198,7 @@ class Data:
             # Default: return MT
             return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
     
-    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT'):
+    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -215,6 +215,12 @@ class Data:
             'trace' : returns t, V as two separate np arrays
             'MT' : returns t, V as a single tp.Time_Multitrace (see below)
             Default is 'MT'
+        align : boolean, optional
+            Specifies whether or not to align the time trace bins to a potential
+            pulsed cavity probe. If True, looks for the time 0 <= t < t_bin
+            corresponding to the maximum value of the first cavity trace and
+            truncates the trace to start at this time, then bins. If False,
+            performs no truncation. Default is True.
 
         Returns
         -------
@@ -222,17 +228,29 @@ class Data:
             .t : 1D np array [bin]
             .V : 2D np array [run,bin]
         """
+        cav_runs = self.cav_runs
+        
         if not f_demod:
             f_demod = self.params.f0_cav
             
+        if align:
+            n_bin_pts = round( self.params.t_bin/cav_runs.dt )
+            
+            # Get first trace and find max (corresponding to one of the pulses)
+            idx = (0,) * (cav_runs.dim-1) + (slice(None),)
+            i0 = np.argmax(cav_runs.V[idx])
+            
+            # Find offset from t=0 to bin aligned to i0
+            t0 = cav_runs.t[i0 % n_bin_pts]
+            print(f'i0 = {i0}. n_bin_pts = {n_bin_pts}. di0 = {i0 % n_bin_pts}. dt = {cav_runs.dt}. t0 = {t0}.')
+            
         # Bin cavity run traces, subtract mean from each bin, and demodulate
-        cav_runs = self.cav_runs
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
         cav_phase = cav_runs.iq_demod(f_demod).phase()
-        cav_bins = cav_phase.bin_trace(self.params.t_bin)
+        cav_bins = cav_phase.bin_trace(self.params.t_bin, t0=t0)
                                 
         # Get bin times
-        bin_times = self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[1]))
+        bin_times = t0 + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[1]))
         
         # Estimate cavity frequency in bins using linear regression
         cav_freq_vals = cav_bins.frequency()

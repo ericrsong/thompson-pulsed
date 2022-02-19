@@ -134,7 +134,7 @@ class Time_Multitrace:
         return len(self.V.shape)
     
 
-    def bin_trace(self, t_bin):
+    def bin_trace(self, t_bin, t0=None):
         """
         Given a time multitrace and a time t_bin, bins the multiple time traces
         into subtraces with length t_bin in time. Given a k+1 dimensional
@@ -146,26 +146,38 @@ class Time_Multitrace:
         t_bin : float
             Binning time in units of self.t
 
+        t0 : float, optional
+            Specifies what time to stop binning. If None, sets t0 = self.t[0].
+            Default is None.
+
         Returns
         -------
         Class of type self (base class: Time_Multitrace)
         """
+        # Parameter checks
+        if t0 is None or t0 < self.t[0]:
+            t0 = self.t[0]
+        elif t0 > self.t[-1]:
+            raise ValueError("Error: t0 is out of bounds!")
         if t_bin < self.dt or t_bin > self.T:
             raise ValueError("Error: t_bin is out of bounds!")
         
+        # Find bin starting index i0
+        i0 = round( t0/self.dt )
+
         # Calculate bin parameters
-        n_pts_raw = self.V.shape[-1] 
+        n_pts_raw = self.V.shape[-1] - i0
         n_bin_pts = round( t_bin/self.dt )
         n_bins = int( n_pts_raw / n_bin_pts )
         n_pts = n_bins * n_bin_pts
         
         # Reshape array
-        V = self.V[..., :n_pts]
+        V = self.V[..., i0:i0+n_pts]
         new_shape = V.shape[:-1] + (n_bins, n_bin_pts)
         V = np.reshape(V, new_shape)
         
         # Take only time values for first bin
-        t = self.t[:n_bin_pts]
+        t = self.t[i0:i0+n_bin_pts]
         
         return( type(self)(t, V) )
     
