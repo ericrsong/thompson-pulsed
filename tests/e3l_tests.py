@@ -19,9 +19,9 @@ import matplotlib.pyplot as plt
 import os
 
 """
-Define files to import as shots of the experiment
+Define files to import as sequences of the experiment
 """
-zpad, n_shots = 0, 10
+zpad, n_seqs = 0, 10
 
 file_title = "3L_TEST_NS"
 folder = 'example_data/e3l'
@@ -48,17 +48,17 @@ params.demod_smoother = lambda V: \
     e3l.moving_average(V, round(1/params.f0_atom/dt/2))
 
 """
-Create experiment object and load with shots
+Create experiment object and load with sequences
 """
 expt = e3l.Experiment(params)
-for i in range(n_shots):
+for i in range(n_seqs):
     file_num = str(i).zfill(zpad)
     file_name = file_title + file_num + '.txt'
     file = os.path.join(folder, file_name)
 
-    expt.load_shot(file)
+    expt.load_sequence(file)
 
-    print(f'Shot {i+1} of {n_shots} loaded.')
+    print(f'Sequence {i+1} of {n_seqs} loaded.')
 
 expt.preprocess()
 

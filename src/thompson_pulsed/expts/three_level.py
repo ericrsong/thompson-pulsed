@@ -45,69 +45,111 @@ class Experiment:
     Root object of a particular instance of the experiment.
     """
     def __init__(self, params):
-        self.shots = []
-        self.data = Data()
+        self.sequences = []
+        self.data = None
         
         if params._all_params_defined():
             self.params = params
         else:
             raise Exception("Error: not all parameters defined!")
 
-    def load_shot(self, file):
+    def load_sequence(self, file):
         """
-        Loads a text file from a single shot into the experiment.
+        Loads a text file from a single sequence into the experiment.
         """
-        self.shots.append(traces.Shot(file, ni_pci5105))
+        self.sequences.append(traces.Sequence.load(file, ni_pci5105))
             
-    def preprocess(self, n_shots = None, load = 'newest'):
+    def preprocess(self, n_seqs = None, load = 'newest', premeasure = True,
+                   postmeasure = True):
+        """
+        Given loaded sequences, preprocess data contained inside and store in
+        expt.data.
+
+        Parameters
+        ----------
+        n_seqs : int, optional
+            Number of sequences to load. If None, loads all sequences
+            available. The default is None.
+        load : str, optional
+            Specifies which sequences to load to the Data class. If 'oldest',
+            loads the first n_seqs sequences. If 'newest', loads the last
+            n_seqs sequences. The default is 'newest'.
+        premeasure : bool, optional
+            Specifies whether or not a premeasurement of the cavity occurred.
+            If True, function assumes the first Trace in each Sequence is a
+            measurement of the AC stark shifted cavity frequency. If False,
+            function assumes the first Trace is a shot of the experiment. The
+            default is True.
+        postmeasure : bool, optional
+            Specifies whether or not a postmeasurement of the cavity occurred.
+            If True, function assumes the last Trace in each Sequence is a 
+            measurement of the bare cavity frequency after the atoms are blown
+            away. If False, the function assumes the last Trace is a shot of
+            the experiment. The default is True.
+
+        Returns
+        -------
+        None.
+
+        """
         if not self.params:
             raise Exception("Error: need to set experiment parameters!")
-        if not self.shots:
-            raise Exception("Error: no shots loaded to experiment!")
+        if not self.sequences:
+            raise Exception("Error: no sequences loaded to experiment!")
         
         # Process optional args
-        if not n_shots or n_shots > len(self.shots):
-            n_shots = len(self.shots)
+        if not n_seqs or n_seqs > len(self.sequences):
+            n_seqs = len(self.sequences)
             
         if load=='oldest':
-            shots = self.shots[:n_shots]
+            sequences = self.sequences[:n_seqs]
         elif load=='newest':
-            shots = self.shots[-n_shots:]
+            sequences = self.sequences[-n_seqs:]
         else:
-            shots = self.shots[-n_shots:]
+            sequences = self.sequences[-n_seqs:]
         
         # Define a single time array for all runs of the experiment
-        self.params.dt = self.shots[0].t[1] - self.shots[0].t[0]
+        self.params.dt = self.sequences[0].t[1] - self.sequences[0].t[0]
         i_run = round(self.params.t_run / self.params.dt)
-        self.data.t = self.params.dt * np.arange(i_run)
-        
-        # TODO: preprocess partially if data already exists
-        
-        # Iterate over all shots
+        t = self.params.dt * np.arange(i_run)
+
+        # Iterate over all sequences
         atom_runs, cav_runs = np.array([]), np.array([])
-        for shot in shots:
-            if not shot.has_triggers:
-                # Assume a single run for each shot and extract points
-                shot_atom_runs = np.array([shot.atom.V[:i_run]])
-                shot_cav_runs = np.array([shot.cav.V[:i_run]])
+        preseq, postseq = None, None
+        for i in range(len(sequences)):
+            seq = sequences[i]
+            
+            # Extract runs from sequence
+            if not seq.has_triggers:
+                # Assume a single run for each sequence and extract points
+                seq_atom_runs = np.array([seq.atom.V[:i_run]])
+                seq_cav_runs = np.array([seq.cav.V[:i_run]])
             else:
-                # Extract runs from the single shot using triggers as markers
-                shot_atom_runs = np.array(
-                    [shot.atom.V[trig:trig+i_run] for trig in shot.triggers]
+                # Extract runs from the single sequence using triggers as markers
+                seq_atom_runs = np.array(
+                    [seq.atom.V[trig:trig+i_run] for trig in seq.triggers]
                     )
-                shot_cav_runs = np.array(
-                    [shot.cav.V[trig:trig+i_run] for trig in shot.triggers]
+                seq_cav_runs = np.array(
+                    [seq.cav.V[trig:trig+i_run] for trig in seq.triggers]
                     )
+                
+            # Check for premeasure
+            if premeasure == True and i == 0:
+                pass
+            
+            # Check for postmeasure
+            if postmeasure == True and i == len(sequences)-1:
+                pass
+                
+            # Otherwise, add runs from sequence to the full arrays
             if atom_runs.size > 0:
-                atom_runs = np.concatenate((atom_runs, shot_atom_runs))
-                cav_runs = np.concatenate((cav_runs, shot_cav_runs))
+                atom_runs = np.concatenate((atom_runs, seq_atom_runs))
+                cav_runs = np.concatenate((cav_runs, seq_cav_runs))
             else:
-                atom_runs, cav_runs = shot_atom_runs, shot_cav_runs
+                atom_runs, cav_runs = seq_atom_runs, seq_cav_runs
         
         # Assign to data object
-        self.data.atom_runs = traces.Time_Multitrace(self.data.t, atom_runs)
-        self.data.cav_runs = traces.Time_Multitrace(self.data.t, cav_runs)
-        self.data.params = self.params
+        self.data = Data(t, cav_runs, atom_runs, self.params)
             
 class Parameters:
     def __init__(self):
@@ -130,73 +172,11 @@ class Data:
     """
     Stores preprocessed data. Accessed via the parent Experiment object. 
     """
-    def __init__(self):
-        self.t = None
-        self.cav_runs = None
-        self.atom_runs = None
-        self.params = None
-    
-    def track_cav_frequency(self, out_fmt='MT'):
-        """
-        DEPRECATED METHOD (slower than track_cav_frequency_iq):
-        Bins cavity time traces and fits the FFT of these bins to measure a
-        cavity resonance frequency. Multiple shots give statistics on these
-        bins.
-        
-        Parameters
-        ----------
-        out_fmt : str, optional
-            Specifies what format the data is outputted in. All methods other than
-            the default are deprecated.
-            'trace' : returns t, V as two separate np arrays
-            'MT' : returns t, V as a single tp.Time_Multitrace (see below)
-            Default is 'MT'
-                    
-        Returns
-        -------
-        cav_freqs : tp.Time_Multitrace
-            .t : 1D np array [bin]
-            .V : 2D np array [run,bin]
-        """
-        # Bin cavity run traces, subtract mean from each bin, and do an FFT
-        cav_bins = self.cav_runs.bin_trace(self.params.t_bin)
-        cav_bins.V -= np.mean(cav_bins.V, axis=-1, keepdims=True)
-        cav_ffts = cav_bins.fft(t_pad = self.params.t_fft_pad)
-                                
-        # Get bin times
-        bin_times = self.params.t_bin * (0.5 + np.arange(cav_ffts.V.shape[1]))
-        
-        cav_freq_vals = np.zeros(cav_ffts.V.shape[:-1])
-        for r in range(cav_ffts.V.shape[0]):
-            run = cav_ffts.V[r,...]
-            for b in range(run.shape[0]):
-                bin = run[b,...]
-                try:
-                    [pOpt, pCov] = curve_fit(
-                            self.params.fft_fit,
-                            cav_ffts.f, np.abs(bin)**2,
-                            p0 = [self.params.f0_cav, 1]
-                            )
-                    cav_freq_vals[r,b] = np.abs(pOpt[0])
-                except RuntimeError:
-                    # print('Fit ' + str(bin+1) + ' of ' + str(n_bins) + ' failed.')
-                    # plt.figure()
-                    # plt.plot(fs, np.abs(Vfs[bin,:])**2)
-                    
-                    # Set fitted frequency to a random value below the Nyquist frequency
-                    cav_freq_vals[r,b] = np.random.uniform(low=0, high=np.max(cav_ffts.f))
-            if (r+1) % 10 == 0:
-                print(f"Run {r+1} of {cav_ffts.V.shape[0]} processed.")
-
-        # Choose output format
-        if out_fmt == 'array':
-            # Deprecated: try returning multitrace (MT)
-            return( bin_times, cav_freq_vals )
-        elif out_fmt == 'MT':
-            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
-        else:
-            # Default: return MT
-            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
+    def __init__(self, t, cav_runs, atom_runs, params):
+        self.t = t
+        self.cav_runs = traces.Time_Multitrace(t, cav_runs)
+        self.atom_runs = traces.Time_Multitrace(t, atom_runs)
+        self.params = params
     
     def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True):
         """
@@ -242,7 +222,7 @@ class Data:
             
             # Find offset from t=0 to bin aligned to i0
             t0 = cav_runs.t[i0 % n_bin_pts]
-            print(f'i0 = {i0}. n_bin_pts = {n_bin_pts}. di0 = {i0 % n_bin_pts}. dt = {cav_runs.dt}. t0 = {t0}.')
+            # print(f'i0 = {i0}. n_bin_pts = {n_bin_pts}. di0 = {i0 % n_bin_pts}. dt = {cav_runs.dt}. t0 = {t0}.')
             
         # Bin cavity run traces, subtract mean from each bin, and demodulate
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)

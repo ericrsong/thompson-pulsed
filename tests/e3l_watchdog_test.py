@@ -114,7 +114,7 @@ def watch_dir(path='.', keep_files=True):
             newest_file = event.src_path
             if newest_file not in loaded_files:
                 # Load newest file into experiment
-                expt.load_shot(newest_file)
+                expt.load_sequence(newest_file)
                 loaded_files.append(newest_file)
                 print(f'File loaded: {newest_file}')
                 
@@ -129,7 +129,7 @@ def watch_dir(path='.', keep_files=True):
                             loaded_files = loaded_files[1:]
                 
                 # Process enough data to display demodulated atom trace
-                expt.preprocess(n_shots = 1, load = 'newest')
+                expt.preprocess(n_seqs = 1, load = 'newest')
                 cav_freqs = expt.data.track_cav_frequency_iq()
                 cav_freqs_mean = np.mean(cav_freqs.V, axis=0)
                 cav_freqs_stdmean = np.std(cav_freqs.V, axis=0) / np.sqrt(cav_freqs.V.shape[0])

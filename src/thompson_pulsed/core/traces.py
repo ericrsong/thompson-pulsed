@@ -10,23 +10,52 @@ import matplotlib.pyplot as plt
 
 import keyword
 
-__all__ = ['Shot', 'Time_Multitrace', 'MT_Phasor', 'MT_Phase', 
+__all__ = ['Sequence', 'Time_Multitrace', 'MT_Phasor', 'MT_Phase', 
            'Frequency_Multitrace']
 
-class Shot:
+class Sequence:
     """
-    Stores information for a single shot of an experiment. This is a generic
+    Stores information for a single sequence of an experiment. This is a generic
     class definition with variable-name attributes. 
     
-    A Shot object is required to have a time array, with the name 't'. This
+    A Sequence object is required to have a time array, with the name 't'. This
     array is detected and then used as the time record for all other arrays
     when packaged into Time Traces.
     
-    Optionally, a Shot object may have a trigger array, with the name 'trig'.
+    Optionally, a Sequence object may have a trigger array, with the name 'trig'.
     This array is detected and then used to mark indices where a trigger is
     found.
     """
-    def __init__(self, file, parser):
+    def __init__(self, t, **kwargs):
+        self.t = t
+        for key in kwargs:
+            vars(self)[key] = Time_Multitrace(t, kwargs[key])
+
+        # Optional: find trigger array and record triggered indices
+        self.has_triggers = ('trig' in kwargs)
+        if self.has_triggers:
+            self.triggers = self._mark_triggers()
+        else:
+            self.triggers = None
+    
+    @classmethod
+    def load(cls, file, parser):
+        """
+        Generates a Sequence class by extracting data from a given file using
+        the proper parser function. This is a class method so can be called
+        directly on the class Sequence.
+
+        Parameters
+        ----------
+        file : str
+            Path to the file in question.
+        parser : function
+            Parser used to extract relevant data from file.
+
+        Returns
+        -------
+        An instance of Sequence in the form Sequence(t, **data_dict_from_file)
+        """
         data, dataset_names = parser(file)
         
         # Find time array
@@ -35,9 +64,10 @@ class Shot:
         except ValueError:
             print('No time array with name "t" detected in file.')
             raise
-        self.t = data[i_t]
+        t = data[i_t]
         
-        # Assign other arrays to variable-name attributes as Time Multitrace objects
+        # Assign other arrays to variable-name attributes to kwargs
+        kwargs = {}
         for i in range(len(dataset_names)):
             if i == i_t:
                 continue
@@ -46,14 +76,9 @@ class Shot:
                 raise SyntaxError(
                     f'"{dataset_name}" is not a valid variable name.'
                     )
-            vars(self)[dataset_name] = Time_Multitrace(self.t, data[i])
+            kwargs[dataset_name] = data[i]
         
-        # Optional: find trigger array and record triggered indices
-        self.has_triggers = ('trig' in dataset_names)
-        if self.has_triggers:
-            self.triggers = self._mark_triggers()
-        else:
-            self.triggers = None
+        return( cls(t, **kwargs) )
     
     def _mark_triggers(self, slope=1):
         """
