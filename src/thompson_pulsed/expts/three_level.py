@@ -154,24 +154,24 @@ class Experiment:
         fi = None
         if premeasure > 0:
             fi_runs = Data(t, preseq_cav, None, self.params).track_cav_frequency_iq()
-            fi_seqs = Time_Multitrace(
+            fi_seqs = traces.Time_Multitrace(
                 fi_runs.t, np.mean(fi_runs.V, axis=1),
                 dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
             )
-            fi = np.average(fi_seqs.V, axis=-1, weights=fi_seqs.dV)
+            fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
         
         # Process postmeasure. fb.shape = (seq,)
         fb = None
-        if premeasure > 0:
+        if postmeasure > 0:
             fb_runs = Data(t, postseq_cav, None, self.params).track_cav_frequency_iq()
-            fb_seqs = Time_Multitrace(
+            fb_seqs = traces.Time_Multitrace(
                 fb_runs.t, np.mean(fb_runs.V, axis=1),
                 dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
             )
-            fb = np.average(fb_seqs.V, axis=-1, weights=fb_seqs.dV)
+            fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
         
         # Assign to data object
-        self.data = Data(t, cav_runs, atom_runs, self.params)
+        self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)
             
 class Parameters:
     def __init__(self):
@@ -194,11 +194,17 @@ class Data:
     """
     Stores preprocessed data. Accessed via the parent Experiment object. 
     """
-    def __init__(self, t, cav_runs, atom_runs, params):
+    def __init__(self, t, cav_runs, atom_runs, params, fi=None, fb=None):
         self.t = t
-        self.cav_runs = traces.Time_Multitrace(t, cav_runs)
-        self.atom_runs = traces.Time_Multitrace(t, atom_runs)
+        self.cav_runs = traces.Time_Multitrace(t, cav_runs) \
+            if (cav_runs is not None) else None
+        self.atom_runs = traces.Time_Multitrace(t, atom_runs) \
+            if (atom_runs is not None) else None
         self.params = params
+        
+        # Initial and bare cavity frequency estimators. Shape: (seq,)
+        self.fi = fi
+        self.fb = fb
     
     def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True):
         """
