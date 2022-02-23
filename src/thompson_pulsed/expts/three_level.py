@@ -143,32 +143,38 @@ class Experiment:
                     else np.array([seq_cav_runs[-postmeasure:]])
                 seq_cav_runs = seq_cav_runs[:-postmeasure]
                 
-            # Add remaining runs from sequence to the full arrays
+            # Add remaining runs from sequence to the full arrays. (seq, run, t)
             if atom_runs.size > 0:
-                atom_runs = np.concatenate((atom_runs, seq_atom_runs))
-                cav_runs = np.concatenate((cav_runs, seq_cav_runs))
+                atom_runs = np.concatenate((atom_runs, [seq_atom_runs]), axis=0)
+                cav_runs = np.concatenate((cav_runs, [seq_cav_runs]), axis=0)
             else:
-                atom_runs, cav_runs = seq_atom_runs, seq_cav_runs
+                atom_runs = np.array([seq_atom_runs])
+                cav_runs = np.array([seq_cav_runs])
         
-        # Process premeasure. fi.shape = (seq,)
+        # Process premeasure. fi.shape = (seq,1,1)
         fi = None
         if premeasure > 0:
-            fi_runs = Data(t, preseq_cav, None, self.params).track_cav_frequency_iq()
+            fi_runs = Data(t, preseq_cav, None, self.params) \
+                .track_cav_frequency_iq(collapse=False)
             fi_seqs = traces.Time_Multitrace(
                 fi_runs.t, np.mean(fi_runs.V, axis=1),
                 dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
             )
             fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
         
-        # Process postmeasure. fb.shape = (seq,)
+        # Process postmeasure. fb.shape = (seq,1,1)
         fb = None
         if postmeasure > 0:
-            fb_runs = Data(t, postseq_cav, None, self.params).track_cav_frequency_iq()
+            fb_runs = Data(t, postseq_cav, None, self.params) \
+                .track_cav_frequency_iq(collapse=False)
             fb_seqs = traces.Time_Multitrace(
                 fb_runs.t, np.mean(fb_runs.V, axis=1),
                 dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
             )
             fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
+            print(fb_runs.V.shape)
+            print(fb_seqs.V.shape)
+            print(fb)
         
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)
@@ -206,7 +212,7 @@ class Data:
         self.fi = fi
         self.fb = fb
     
-    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True):
+    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True, collapse = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -229,6 +235,9 @@ class Data:
             corresponding to the maximum value of the first cavity trace and
             truncates the trace to start at this time, then bins. If False,
             performs no truncation. Default is True.
+        collapse : boolean, optional
+            Specifies whether to collapse all degrees of freedom in the array
+            except for the final two: [run,bin]. Default is True.
 
         Returns
         -------
@@ -261,10 +270,19 @@ class Data:
         cav_bins = cav_phase.bin_trace(self.params.t_bin, t0=t0)
                                 
         # Get bin times
-        bin_times = t0 + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[1]))
+        bin_times = t0 + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
         
         # Estimate cavity frequency in bins using linear regression
         cav_freq_vals = cav_bins.frequency()
+        
+        # Subtract bare cavity frequency
+        if self.fb is not None:
+            cav_freq_vals -= self.fb[:,None,None]
+        
+        if collapse == True:
+            # Collapse (seq,run) indices to give (run,bin)
+            new_shape = (np.prod(cav_freq_vals.shape[:-1]),) + cav_freq_vals.shape[-1:]
+            cav_freq_vals = np.reshape(cav_freq_vals, new_shape)
         
         # Choose output format
         if out_fmt == 'array':
@@ -278,7 +296,7 @@ class Data:
     
     def demod_atom_trace(self):
         """
-        # TODO
+        # TODO: different array shape from before (seq,run) vs (run)
         """
         if self.atom_runs is None:
             raise Exception('atom_runs was not set!')
