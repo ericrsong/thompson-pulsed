@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2022-02-22
+
+### Added
+- `premeasure` and `postmeasure` options for `e3l.Experiment.preprocess()` allow for calculation of initial and bare cavity frequency
+- `collapse` option for `e3l.Data.track_cav_frequency_iq()`, which collapses all non-time dimensions if set to True (default)
+
 ### Changed
 - `CHANGELOG.md` now uses inline code formatting
+- Shot class renamed to Sequence class
+- `Sequence` class now initializes by default using arrays instead of a file and parser. To initialize a `Sequence` object using data from a file, the `Sequence.load()` class method was added.
+- `e3l.Data` class now requires arrays to initialize, replacing earlier functionality where it initialized with NoneType attributes
+
+### Removed
+- Old non-IQ-based `e3l.Data.track_cav_frequency()` method
 
 ## [0.3.0] - 2022-02-14
 
@@ -59,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser module in `/core/` containing a single parsing function for the NI PCI-5105 oscilloscope board
 - Experiment-specific analysis code for the 3L experiment, stored in `/expts/three_level.py`
 
-[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.0.0...v0.1.0
