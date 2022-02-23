@@ -59,8 +59,8 @@ class Experiment:
         """
         self.sequences.append(traces.Sequence.load(file, ni_pci5105))
             
-    def preprocess(self, n_seqs = None, load = 'newest', premeasure = True,
-                   postmeasure = True):
+    def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
+                   postmeasure = 0):
         """
         Given loaded sequences, preprocess data contained inside and store in
         expt.data.
@@ -74,18 +74,12 @@ class Experiment:
             Specifies which sequences to load to the Data class. If 'oldest',
             loads the first n_seqs sequences. If 'newest', loads the last
             n_seqs sequences. The default is 'newest'.
-        premeasure : bool, optional
-            Specifies whether or not a premeasurement of the cavity occurred.
-            If True, function assumes the first Trace in each Sequence is a
-            measurement of the AC stark shifted cavity frequency. If False,
-            function assumes the first Trace is a shot of the experiment. The
-            default is True.
-        postmeasure : bool, optional
-            Specifies whether or not a postmeasurement of the cavity occurred.
-            If True, function assumes the last Trace in each Sequence is a 
-            measurement of the bare cavity frequency after the atoms are blown
-            away. If False, the function assumes the last Trace is a shot of
-            the experiment. The default is True.
+        premeasure : int, optional
+            Specifies number of premeasurement runs performed in sequence. 
+            Default is 0.
+        postmeasure : int, optional
+            Specifies number of postmeasurement runs performed in sequence. 
+            Default is 0.
 
         Returns
         -------
@@ -115,38 +109,66 @@ class Experiment:
 
         # Iterate over all sequences
         atom_runs, cav_runs = np.array([]), np.array([])
-        preseq, postseq = None, None
+        preseq_cav, postseq_cav = None, None
         for i in range(len(sequences)):
             seq = sequences[i]
             
             # Extract runs from sequence
             if not seq.has_triggers:
                 # Assume a single run for each sequence and extract points
-                seq_atom_runs = np.array([seq.atom.V[:i_run]])
-                seq_cav_runs = np.array([seq.cav.V[:i_run]])
+                seq_atom_runs = np.array([seq.atom.V[..., :i_run]])
+                seq_cav_runs = np.array([seq.cav.V[..., :i_run]])
             else:
                 # Extract runs from the single sequence using triggers as markers
                 seq_atom_runs = np.array(
-                    [seq.atom.V[trig:trig+i_run] for trig in seq.triggers]
+                    [seq.atom.V[..., trig:trig+i_run] for trig in seq.triggers]
                     )
                 seq_cav_runs = np.array(
-                    [seq.cav.V[trig:trig+i_run] for trig in seq.triggers]
+                    [seq.cav.V[..., trig:trig+i_run] for trig in seq.triggers]
                     )
                 
-            # Check for premeasure
-            if premeasure == True and i == 0:
-                pass
+            # Check for premeasure. preseq_cav.shape = (seq, run, t)
+            if premeasure > 0 and seq_cav_runs.shape[0] > premeasure:
+                preseq_cav = \
+                    np.concatenate((preseq_cav, [seq_cav_runs[:premeasure]]), axis=0) \
+                    if (preseq_cav is not None) \
+                    else np.array([seq_cav_runs[:premeasure]])
+                seq_cav_runs = seq_cav_runs[premeasure:]
             
-            # Check for postmeasure
-            if postmeasure == True and i == len(sequences)-1:
-                pass
+            # Check for postmeasure. postseq_cav.shape = (seq, run, t)
+            if postmeasure > 0 and seq_cav_runs.shape[0] > postmeasure:
+                postseq_cav = \
+                    np.concatenate((postseq_cav, [seq_cav_runs[-postmeasure:]]), axis=0) \
+                    if (postseq_cav is not None) \
+                    else np.array([seq_cav_runs[-postmeasure:]])
+                seq_cav_runs = seq_cav_runs[:-postmeasure]
                 
-            # Otherwise, add runs from sequence to the full arrays
+            # Add remaining runs from sequence to the full arrays
             if atom_runs.size > 0:
                 atom_runs = np.concatenate((atom_runs, seq_atom_runs))
                 cav_runs = np.concatenate((cav_runs, seq_cav_runs))
             else:
                 atom_runs, cav_runs = seq_atom_runs, seq_cav_runs
+        
+        # Process premeasure. fi.shape = (seq,)
+        fi = None
+        if premeasure > 0:
+            fi_runs = Data(t, preseq_cav, None, self.params).track_cav_frequency_iq()
+            fi_seqs = Time_Multitrace(
+                fi_runs.t, np.mean(fi_runs.V, axis=1),
+                dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
+            )
+            fi = np.average(fi_seqs.V, axis=-1, weights=fi_seqs.dV)
+        
+        # Process postmeasure. fb.shape = (seq,)
+        fb = None
+        if premeasure > 0:
+            fb_runs = Data(t, postseq_cav, None, self.params).track_cav_frequency_iq()
+            fb_seqs = Time_Multitrace(
+                fb_runs.t, np.mean(fb_runs.V, axis=1),
+                dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
+            )
+            fb = np.average(fb_seqs.V, axis=-1, weights=fb_seqs.dV)
         
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params)
@@ -208,6 +230,9 @@ class Data:
             .t : 1D np array [bin]
             .V : 2D np array [run,bin]
         """
+        if self.cav_runs is None:
+            raise Exception('cav_runs was not set!')
+        
         cav_runs = self.cav_runs
         
         if not f_demod:
@@ -249,6 +274,9 @@ class Data:
         """
         # TODO
         """
+        if self.atom_runs is None:
+            raise Exception('atom_runs was not set!')
+            
         # Find the phase reference pulse (assume S/N > 1)
         trig_level = 0.6
         V = self.atom_runs.V - np.mean(self.atom_runs.V, axis=-1, keepdims=True)
