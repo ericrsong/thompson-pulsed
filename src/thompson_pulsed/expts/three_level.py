@@ -172,9 +172,6 @@ class Experiment:
                 dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
             )
             fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
-            print(fb_runs.V.shape)
-            print(fb_seqs.V.shape)
-            print(fb)
         
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)

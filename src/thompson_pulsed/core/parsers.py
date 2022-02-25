@@ -7,7 +7,9 @@ Created on Tue Jan 25 17:49:15 2022
 import numpy as np
 import pandas as pd
 
-__all__ = ['ni_pci5105', 'ni_pcie7851r_ai']
+import os
+
+__all__ = ['ni_pci5105', 'ni_pcie7851r_ai', 'labview_log']
 
 def ni_pci5105(file):
     """Uses pandas to load data from a CSV-formatted data file, specifically as
@@ -54,3 +56,34 @@ def ni_pcie7851r_ai(file):
     data = df.T.to_numpy()
     
     return( data, dataset_names )
+
+# INCOMPLETE
+def labview_log(dataset_name, path='.'):
+    file = os.path.join(path, f'{dataset_name}_XYGraphDataLog.txt')
+    
+    if os.path.exists(file):
+        df = pd.read_csv(file, delimiter='\t')
+
+    cols = df.columns.to_numpy().astype('str')
+
+    # GenFit columns
+    genfit_label_idx = np.argwhere( np.char.startswith(cols, 'GenFitLabel') ).flatten()
+    genfit_err_idx = np.argwhere( np.char.startswith(cols, 'GenFitErr') ).flatten()
+    genfit_idx = np.array([i for i in range(cols.size) if np.char.isnumeric(cols[i][6:])])
+    
+    # x Param
+    xparam_idx = np.argwhere(cols == 'xParamValue').flatten()
+    
+    # File number
+    filenum_idx = np.argwhere(cols == 'FileNumber').flatten()
+    
+    return( df )
+
+# # INCOMPLETE
+# def labview_graphs(dataset_name, path='.'):
+#     file = os.path.join(path, f'{dataset_name}_XYGraphs.txt')
+    
+#     if os.path.exists(file):
+#         df = pd.read_csv(file, delimiter='\t')
+    
+#     return( df )
