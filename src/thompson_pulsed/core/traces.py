@@ -58,6 +58,9 @@ class Sequence:
         """
         data, dataset_names = parser(file)
         
+        if data.size == 0:
+            raise SequenceLoadException()
+        
         # Find time array
         try:
             i_t = dataset_names.index('t')
@@ -172,7 +175,7 @@ class Time_Multitrace:
             Binning time in units of self.t
 
         t0 : float, optional
-            Specifies what time to stop binning. If None, sets t0 = self.t[0].
+            Specifies what time to start binning. If None, sets t0 = self.t[0].
             Default is None.
 
         Returns
@@ -188,7 +191,7 @@ class Time_Multitrace:
             raise ValueError("Error: t_bin is out of bounds!")
         
         # Find bin starting index i0
-        i0 = round( t0/self.dt )
+        i0 = round( (t0-self.t[0])/self.dt )
 
         # Calculate bin parameters
         n_pts_raw = self.V.shape[-1] - i0
@@ -403,3 +406,6 @@ class Frequency_Multitrace:
         self.df = f[1]-f[0]
         self.F = f[-1]-f[0] + self.df
         self.dim = len(self.V.shape)
+        
+class SequenceLoadException(OSError):
+    pass

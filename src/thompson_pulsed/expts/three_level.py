@@ -4,6 +4,8 @@ Created on Wed Jan 12 18:00:35 2022
 
 @author: dylan
 """
+import time
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -57,8 +59,22 @@ class Experiment:
         """
         Loads a text file from a single sequence into the experiment.
         """
-        self.sequences.append(traces.Sequence.load(file, ni_pci5105))
-            
+        tries = 6
+        delay = 0.1
+        for i in range(tries):
+            try:
+                seq = traces.Sequence.load(file, ni_pci5105)
+            except traces.SequenceLoadException as err:
+                print(f'Try {i+1} to load {file} failed.')
+                if i+1 == tries:
+                    raise err
+                time.sleep(delay)
+                delay *= 2
+                continue
+            break
+        
+        self.sequences.append(seq)
+        
     def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
                    postmeasure = 0):
         """
@@ -150,19 +166,8 @@ class Experiment:
             else:
                 atom_runs = np.array([seq_atom_runs])
                 cav_runs = np.array([seq_cav_runs])
-        
-        # Process premeasure. fi.shape = (seq,1,1)
-        fi = None
-        if premeasure > 0:
-            fi_runs = Data(t, preseq_cav, None, self.params) \
-                .track_cav_frequency_iq(collapse=False)
-            fi_seqs = traces.Time_Multitrace(
-                fi_runs.t, np.mean(fi_runs.V, axis=1),
-                dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
-            )
-            fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
-        
-        # Process postmeasure. fb.shape = (seq,1,1)
+               
+        # Process postmeasure. fb.shape = (seq,)
         fb = None
         if postmeasure > 0:
             fb_runs = Data(t, postseq_cav, None, self.params) \
@@ -173,6 +178,17 @@ class Experiment:
             )
             fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
         
+        # Process premeasure. fi.shape = (seq,)
+        fi = None
+        if premeasure > 0:
+            fi_runs = Data(t, preseq_cav, None, self.params, fb=fb) \
+                .track_cav_frequency_iq(collapse=False)
+            fi_seqs = traces.Time_Multitrace(
+                fi_runs.t, np.mean(fi_runs.V, axis=1),
+                dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
+            )
+            fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
+        
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)
             
@@ -181,10 +197,11 @@ class Parameters:
         self.t_run = None
         self.t_bin = None
         self.t_drive = None
-        self.t_fft_pad = None
+        # self.t_fft_pad = None
+        self.t_cav_pulse = None
         self.f0_cav = None
         self.f0_atom = None
-        self.fft_fit = None
+        # self.fft_fit = None
         self.demod_smoother = None
         
     def _all_params_defined(self):
@@ -209,7 +226,8 @@ class Data:
         self.fi = fi
         self.fb = fb
     
-    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True, collapse = True):
+    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True, collapse = True, \
+                               ignore_pulse_bins = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -235,6 +253,10 @@ class Data:
         collapse : boolean, optional
             Specifies whether to collapse all degrees of freedom in the array
             except for the final two: [run,bin]. Default is True.
+        ignore_pulse_bins : boolean, optional
+            Specifies whether to ignore time bins that occur during a pulse.
+            Assumes an integer number of t_bins in a t_cav_pulse. Default is
+            True.
 
         Returns
         -------
@@ -247,27 +269,33 @@ class Data:
         
         cav_runs = self.cav_runs
         
+        # OPTIONAL ARG: Pull f_demod if not specified
         if not f_demod:
             f_demod = self.params.f0_cav
             
+        # OPTIONAL ARG: Align to pulses
         if align:
-            n_bin_pts = round( self.params.t_bin/cav_runs.dt )
+            n_pulse_pts = round( self.params.t_cav_pulse/cav_runs.dt )
             
             # Get first trace and find max (corresponding to one of the pulses)
             idx = (0,) * (cav_runs.dim-1) + (slice(None),)
-            i0 = np.argmax(cav_runs.V[idx])
+            i_pulse = np.argmax(cav_runs.V[idx])
             
             # Find offset from t=0 to bin aligned to i0
-            t0 = cav_runs.t[i0 % n_bin_pts]
-            # print(f'i0 = {i0}. n_bin_pts = {n_bin_pts}. di0 = {i0 % n_bin_pts}. dt = {cav_runs.dt}. t0 = {t0}.')
+            i0 = i_pulse % n_pulse_pts
+            
+            # Truncate the first part of the trace to align to pulses
+            cav_runs = traces.Time_Multitrace(cav_runs.t[i0:], cav_runs.V[...,i0:])
+            # print(f'i0 = {i0}. n_pulse_pts = {n_pulse_pts}. dt = {cav_runs.dt}.')
+            
             
         # Bin cavity run traces, subtract mean from each bin, and demodulate
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
         cav_phase = cav_runs.iq_demod(f_demod).phase()
-        cav_bins = cav_phase.bin_trace(self.params.t_bin, t0=t0)
+        cav_bins = cav_phase.bin_trace(self.params.t_bin)
                                 
         # Get bin times
-        bin_times = t0 + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
+        bin_times = cav_runs.t[0] + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
         
         # Estimate cavity frequency in bins using linear regression
         cav_freq_vals = cav_bins.frequency()
@@ -275,6 +303,23 @@ class Data:
         # Subtract bare cavity frequency
         if self.fb is not None:
             cav_freq_vals -= self.fb[:,None,None]
+        
+        # OPTIONAL ARG: Remove pulse bins
+        if ignore_pulse_bins:
+            n_bin_pts = round( self.params.t_bin/cav_runs.dt )
+            
+            # Get first trace and find max (corresponding to one of the pulses)
+            idx = (0,) * (cav_runs.dim-1) + (slice(None),)
+            i_pulse = np.argmax(cav_runs.V[idx])
+            
+            # Will ignore every [n_pulse_bins]-th bin
+            n_pulse_pts = round( self.params.t_cav_pulse/cav_runs.dt )
+            n_pulse_bins = round( n_pulse_pts / n_bin_pts )
+            
+            # Delete offending bins. Assumes bin is the 
+            pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
+            cav_freq_vals = np.delete(cav_freq_vals, pulse_slice, axis=-1)
+            bin_times = np.delete(bin_times, pulse_slice, axis=-1)
         
         if collapse == True:
             # Collapse (seq,run) indices to give (run,bin)
