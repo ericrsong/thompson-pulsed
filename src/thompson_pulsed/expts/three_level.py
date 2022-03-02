@@ -76,7 +76,7 @@ class Experiment:
         self.sequences.append(seq)
         
     def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
-                   postmeasure = 0):
+                   premeasure_interleaved = False, postmeasure = 0):
         """
         Given loaded sequences, preprocess data contained inside and store in
         expt.data.
@@ -93,6 +93,11 @@ class Experiment:
         premeasure : int, optional
             Specifies number of premeasurement runs performed in sequence. 
             Default is 0.
+        premeasure_interleaved : bool, optional
+            Specifies whether or not premeasurement runs are interleaved with
+            actual runs. If True, this overrides the premeasure count from
+            the above optional argument and instead assumes one premeasure
+            run for each actual run. Default is False.
         postmeasure : int, optional
             Specifies number of postmeasurement runs performed in sequence. 
             Default is 0.
@@ -117,6 +122,10 @@ class Experiment:
             sequences = self.sequences[-n_seqs:]
         else:
             sequences = self.sequences[-n_seqs:]
+
+        # OPTIONAL ARG: override premeasure argument if interleaved specified
+        if premeasure_interleaved:
+            premeasure = 0
         
         # Define a single time array for all runs of the experiment
         self.params.dt = self.sequences[0].t[1] - self.sequences[0].t[0]
@@ -159,6 +168,14 @@ class Experiment:
                     else np.array([seq_cav_runs[-postmeasure:]])
                 seq_cav_runs = seq_cav_runs[:-postmeasure]
                 
+            # Check for interleaved premeasure. preseq_cav.shape = (seq, run, t)
+            if premeasure_interleaved:
+                preseq_cav = \
+                    np.concatenate((preseq_cav, [seq_cav_runs[::2]]), axis=0) \
+                    if (preseq_cav is not None) \
+                    else np.array([seq_cav_runs[::2]])
+                seq_cav_runs = seq_cav_runs[1::2]
+                
             # Add remaining runs from sequence to the full arrays. (seq, run, t)
             if atom_runs.size > 0:
                 atom_runs = np.concatenate((atom_runs, [seq_atom_runs]), axis=0)
@@ -180,7 +197,7 @@ class Experiment:
         
         # Process premeasure. fi.shape = (seq,)
         fi = None
-        if premeasure > 0:
+        if premeasure > 0 or premeasure_interleaved:
             fi_runs = Data(t, preseq_cav, None, self.params, fb=fb) \
                 .track_cav_frequency_iq(collapse=False)
             fi_seqs = traces.Time_Multitrace(
