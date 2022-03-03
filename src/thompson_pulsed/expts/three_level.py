@@ -189,22 +189,37 @@ class Experiment:
         if postmeasure > 0:
             fb_runs = Data(t, postseq_cav, None, self.params) \
                 .track_cav_frequency_iq(collapse=False)
-            fb_seqs = traces.Time_Multitrace(
-                fb_runs.t, np.mean(fb_runs.V, axis=1),
-                dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
-            )
-            fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
+            if fb_runs.V.shape[1] > 1:
+                # Can calculate statistics for dV
+                fb_seqs = traces.Time_Multitrace(
+                    fb_runs.t, np.mean(fb_runs.V, axis=1),
+                    dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
+                )
+                fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
+            else:
+                # Don't attempt to calculate dV
+                fb_seqs = traces.Time_Multitrace(
+                    fb_runs.t, np.mean(fb_runs.V, axis=1)
+                )
+                fb = np.average(fb_seqs.V, axis=-1)
         
         # Process premeasure. fi.shape = (seq,)
         fi = None
         if premeasure > 0 or premeasure_interleaved:
             fi_runs = Data(t, preseq_cav, None, self.params, fb=fb) \
                 .track_cav_frequency_iq(collapse=False)
-            fi_seqs = traces.Time_Multitrace(
-                fi_runs.t, np.mean(fi_runs.V, axis=1),
-                dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
-            )
-            fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
+            if fi_runs.V.shape[1] > 1:
+                fi_seqs = traces.Time_Multitrace(
+                    fi_runs.t, np.mean(fi_runs.V, axis=1),
+                    dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
+                )
+                fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
+            else:
+                # Don't attempt to calculate dV
+                fi_seqs = traces.Time_Multitrace(
+                    fi_runs.t, np.mean(fi_runs.V, axis=1)
+                )
+                fi = np.average(fi_seqs.V, axis=-1)
         
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)
@@ -244,7 +259,7 @@ class Data:
         self.fb = fb
     
     def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True, collapse = True, \
-                               ignore_pulse_bins = True):
+                               ignore_pulse_bins = True, moving_average = 0):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -274,6 +289,10 @@ class Data:
             Specifies whether to ignore time bins that occur during a pulse.
             Assumes an integer number of t_bins in a t_cav_pulse. Default is
             True.
+        moving_average: float, optional
+            Specifies what timespan of moving average should be applied to the
+            demodulated phasor, if any. If 0, does not perform an average.
+            Default is 0.
 
         Returns
         -------
@@ -287,7 +306,7 @@ class Data:
         cav_runs = self.cav_runs
         
         # OPTIONAL ARG: Pull f_demod if not specified
-        if not f_demod:
+        if f_demod is None:
             f_demod = self.params.f0_cav
             
         # OPTIONAL ARG: Align to pulses
@@ -309,6 +328,8 @@ class Data:
         # Bin cavity run traces, subtract mean from each bin, and demodulate
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
         cav_phase = cav_runs.iq_demod(f_demod).phase()
+        if moving_average > 0:
+            cav_phase = cav_phase.moving_average(moving_average)
         cav_bins = cav_phase.bin_trace(self.params.t_bin)
                                 
         # Get bin times
