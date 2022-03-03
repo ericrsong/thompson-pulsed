@@ -102,11 +102,12 @@ def watch_dir(path='.', keep_files=True):
             # Look for the second most recent FileCreatedEvent
             # Second most recent hopefully ensures it is completely loaded
             event, created_events = None, 0
-            for i in range(1, len(event_handler.events)+1):
-                if event_handler.events[-i].event_type == 'created':
+            event_count = len(event_handler.events)
+            for i in range(1, event_count+1):
+                if event_handler.events[event_count-i].event_type == 'created':
                     created_events += 1
                 if created_events == 2:
-                    event = event_handler.events[-i]
+                    event = event_handler.events[event_count-i]
                     break
             if not event:
                 continue
