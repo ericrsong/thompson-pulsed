@@ -399,9 +399,9 @@ class MT_Phase(Time_Multitrace):
         wraps = np.rint( (phase[..., 1:]-phase[..., :-1])/(2*np.pi) )
         change = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ), 
                                  -np.cumsum(wraps, axis=-1)*2*np.pi), axis = -1)
-        self.V += change
+        self.V += change            
         
-    def frequency(self, t_bin=None):
+    def frequency(self, t_bin=None, t0=None, wfunc=None):
         """
         Calculates a linear regression slope in O(n) time, using a closed-form
         formula for least-squares that assumes evenly sampled points in time. 
@@ -409,22 +409,46 @@ class MT_Phase(Time_Multitrace):
         Parameters
         ----------
         t_bin : float, optional
-            Describes how to bin 
+            Describes what size window to bin over. If None, assumes a single
+            bin for the whole time trace. Default is None.
+        t0 : float, optional
+            Describes a start time to bin 
+        wfunc : scalar function (np array compatible), optional
+            Describes a weight map to apply to frequency measurement. Domain of
+            wfunc assumed to vary from 0 to 1. Example: wfunc = lambda x:
+            np.sin(np.pi*x)**2. If None, assumes a constant weight function.
+            Default is None.
 
         Returns
         -------
         freqs : np array of floats, shape = self.V.shape[:-1]
             Estimated frequencies of Phase traces, expressed in Hz (cycles/sec)
         """
-        if t_bin:
-            return( self.bin_trace(t_bin).frequency(t_bin=None) )
-        else:
+        if t_bin is not None:
+            return( self.bin_trace(t_bin, t0=t0).frequency(t_bin=None, wfunc=wfunc) )
+        elif wfunc is None:
+            # No weights specified. Assume equal weighting
             y = self.V
             n = y.shape[-1]
             x = np.arange(1, n+1) - (n+1)/2
             dx = self.dt
             
             freqs = np.sum(x*y, axis=-1) / ( n*(n**2-1)/12 * dx ) * 1/(2*np.pi)
+            return(freqs)
+        else:
+            # Calculate weights
+            y = self.V
+            n =  y.shape[-1]
+            x = np.arange(n)/n + 1/(2*n) # x array from 0 to 1
+            w = wfunc(x)
+            dx = self.T
+            
+            xybar = np.average(x*y, axis=-1, weights=w)
+            xbar = np.average(x, axis=-1, weights=w)
+            ybar = np.average(y, axis=-1, weights=w)
+            x2bar = np.average(x**2, axis=-1, weights=w)
+            
+            freqs = (xybar - xbar*ybar)/(x2bar - xbar**2) * 1/dx * 1/(2*np.pi)
             return(freqs)
 
 class Frequency_Multitrace:
