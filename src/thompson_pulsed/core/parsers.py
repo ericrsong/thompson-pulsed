@@ -9,7 +9,7 @@ import pandas as pd
 
 import os
 
-__all__ = ['ni_pci5105', 'ni_pcie7851r_ai', 'labview_log']
+__all__ = ['ni_pci5105', 'ni_pcie7851r_ai', 'keysight_hsa_csv', 'labview_log']
 
 def ni_pci5105(file):
     """Uses pandas to load data from a CSV-formatted data file, specifically as
@@ -56,6 +56,31 @@ def ni_pcie7851r_ai(file):
     data = df.T.to_numpy()
     
     return( data, dataset_names )
+
+def keysight_hsa_csv(file):
+    data, in_header, i = [], True, 0
+    with open(file,'r') as f:
+        for line in f:
+            # Work through header
+            line = line.replace('\x00','').split(',')
+            if line[0] == 'Frequency(Hz)':
+                num_cols = len(line) - 1
+                in_header = False
+                header_names = line[1:]
+                continue
+            elif in_header:
+                i += 1
+                continue
+            
+            # When not in header, add data
+            data.append([float(x) for x in line[:num_cols] if len(line) >= num_cols])
+    data = np.transpose(data)
+
+    # Construct dataset names based on header
+    channels = [[int(x) for x in name if x.isdigit()][0] for name in header_names]
+    dataset_names = [f'ch{channel}' for channel in channels]
+
+    return(data, dataset_names)
 
 # INCOMPLETE
 def labview_log(dataset_name, path='.'):

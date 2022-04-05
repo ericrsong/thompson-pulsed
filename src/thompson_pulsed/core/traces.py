@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import keyword
 
 __all__ = ['Sequence', 'Time_Multitrace', 'MT_Phasor', 'MT_Phase', 
-           'Frequency_Multitrace']
+           'Frequency_Multitrace', 'Frequency_Sequence']
 
 class Sequence:
     """
@@ -465,6 +465,54 @@ class Frequency_Multitrace:
         self.df = f[1]-f[0]
         self.F = f[-1]-f[0] + self.df
         self.dim = len(self.V.shape)
+
+class Frequency_Sequence:
+    def __init__(self, f, **kwargs):
+        self.f = f
+        for key in kwargs:
+            vars(self)[key] = Frequency_Multitrace(f, kwargs[key])
+    
+    @classmethod
+    def load(cls, file, parser):
+        """
+        Generates a Frequency_Sequence class by extracting data from a give
+        file using the proper parser function. This is a class method so can
+        be called directly on the class Frequency_Sequence.
+
+        Parameters
+        ----------
+        file : str
+            Path to the file in question.
+        parser : function
+            Parser used to extract relevant data from file.
+
+        Returns
+        -------
+        An instance of Frequency_Sequence in the form Frequency_Sequence(f, **data_dict_from_file)
+        """
+        data, dataset_names = parser(file)
+        
+        # Find time array
+        try:
+            i_f = dataset_names.index('f')
+        except ValueError:
+            print('No time array with name "f" detected in file.')
+            raise
+        f = data[i_f]
+        
+        # Assign other arrays to variable-name attributes to kwargs
+        kwargs = {}
+        for i in range(len(dataset_names)):
+            if i == i_f:
+                continue
+            dataset_name = dataset_names[i]
+            if not dataset_name.isidentifier() or keyword.iskeyword(dataset_name) or dataset_name == 'None':
+                raise SyntaxError(
+                    f'"{dataset_name}" is not a valid variable name.'
+                    )
+            kwargs[dataset_name] = data[i]
+        
+        return( cls(f, **kwargs) )
         
 class SequenceLoadException(OSError):
     pass
