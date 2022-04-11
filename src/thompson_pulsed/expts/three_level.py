@@ -305,32 +305,47 @@ class Data:
         if self.cav_runs is None:
             raise Exception('cav_runs was not set!')
         
-        cav_runs = self.cav_runs
-        
         # OPTIONAL ARG: Pull f_demod if not specified
         if f_demod is None:
             f_demod = self.params.f0_cav
+            
+        cav_runs = self.cav_runs
+        cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
+        cav_phase = cav_runs.iq_demod(f_demod).phase()
+        phase = cav_phase.V
+        
+        t_pulse = self.params.t_cav_pulse
+        n_pulse_pts = round( t_pulse/cav_phase.dt )
+        n_pts = phase.shape[-1]
+        n_runs = np.prod(phase.shape[:-1])
         
         if int(self.params.t_cav_pulse/self.params.t_bin) > 1:
             # OPTIONAL ARG: Align to pulses
+            n_bin_pts = round( self.params.t_bin/cav_runs.dt )
+            
             use_phase_jumps = True
-            if use_phase_jumps:
+            if align and use_phase_jumps:
                 # New method for aligning to pulses
-                align = False
                 
-                # Find bin points which align with cavity pulses. Assume all runs are aligned
-                i_pulse = np.unravel_index(
-                    np.argmax(phase[...,1:]-phase[...,:-1]), phase[...,:-1].shape
-                    )[-1]
-                n_pulse_pts = round(t_pulse/cav_phase.dt)
+                # Collapse into trace of t_pulse
+                phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
+                                         phase[...,1:]-phase[...,:-1]), axis = -1)
+                n_pulses_temp = int(n_pts/n_pulse_pts)
+                pulse_finder = np.reshape(
+                    phase_diff[..., :n_pulses_temp*n_pulse_pts]**2,
+                    (n_runs*n_pulses_temp, n_pulse_pts)
+                    ).mean(axis=-2)
                 
-                # Truncate the first part of the trace to align to pulses
-                i0 = np.round( i_pulse % n_pulse_pts ).astype(int)                
+                # Find index with max alignment with phase jumps
+                pulse_max = np.max(pulse_finder, axis=-1)
+                tol = 0.9
+                imin = np.argmax(pulse_finder > tol*pulse_max, axis=-1)
+                imax = n_pulse_pts-1 - np.argmax(pulse_finder[...,::-1] > tol*pulse_max, axis=-1)
+                i0_pulse = np.round( (imin+imax)/2 ).astype(int)
+                i0 = i0_pulse + int(n_bin_pts/2) # Contain most of jump within a single bin
+                
                 cav_runs = traces.Time_Multitrace(cav_runs.t[i0:], cav_runs.V[...,i0:])
-                
-            if align:
-                n_pulse_pts = round( self.params.t_cav_pulse/cav_runs.dt )
-                
+            elif align:                
                 # Get first trace and find max (corresponding to one of the pulses)
                 idx = (0,) * (cav_runs.dim-1) + (slice(None),)
                 i_pulse = np.argmax(cav_runs.V[idx])
@@ -356,14 +371,8 @@ class Data:
             # Estimate cavity frequency in bins using linear regression
             cav_freq_vals = cav_bins.frequency()
             
-            # Subtract bare cavity frequency
-            if self.fb is not None:
-                cav_freq_vals -= self.fb[:,None,None]
-            
             # OPTIONAL ARG: Remove pulse bins
-            if ignore_pulse_bins:
-                n_bin_pts = round( self.params.t_bin/cav_runs.dt )
-                
+            if ignore_pulse_bins:                
                 # Get first trace and find max (corresponding to one of the pulses)
                 idx = (0,) * (cav_runs.dim-1) + (slice(None),)
                 i_pulse = np.argmax(cav_runs.V[idx])
@@ -378,28 +387,37 @@ class Data:
                 bin_times = np.delete(bin_times, pulse_slice, axis=-1)
         else:
             # Calculate frequency in bins of each pulse
-            # Get MT_Phase trace for demodulated cavity data
-            cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
-            cav_phase = cav_runs.iq_demod(f_demod).phase()
-
-            phase = cav_phase.V
-            t_pulse = self.params.t_cav_pulse
-            n_pulse_pts = round( self.params.t_cav_pulse/cav_runs.dt )
-            
-            runs_aligned = False
+            # Get MT_Phase trace for demodulated cavity data            
+            runs_aligned = True
+            single_index_align = False
             if runs_aligned:
                 # Assume runs are aligned to each other
                 # Find where pulses are
-                i_pulse = np.unravel_index(
-                    np.argmax(phase[...,1:]-phase[...,:-1]), phase[...,:-1].shape
-                    )[-1]
-                n_pulse_pts = round(t_pulse/cav_phase.dt)
-                n_pts = phase.shape[-1]
-    
-                # Find bin points which align with cavity pulses
-                ip0 = np.round( i_pulse % n_pulse_pts ).astype(int)
-                n_pulses = int( (n_pts - 1 - ip0) / n_pulse_pts )
-                n_runs = np.prod(phase.shape[:-1])
+                if single_index_align == True:
+                    i_pulse = np.unravel_index(
+                        np.argmax(phase[...,1:]-phase[...,:-1]), phase[...,:-1].shape
+                        )[-1]
+                    
+                    # Find bin points which align with cavity pulses
+                    ip0 = np.round( i_pulse % n_pulse_pts ).astype(int)
+                else:
+                    # Collapse into trace of t_pulse
+                    phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
+                                             phase[...,1:]-phase[...,:-1]), axis = -1)
+                    n_pulses_temp = int(n_pts/n_pulse_pts)
+                    pulse_finder = np.reshape(
+                        phase_diff[..., :n_pulses_temp*n_pulse_pts]**2,
+                        (n_runs*n_pulses_temp, n_pulse_pts)
+                        ).mean(axis=-2)
+                    
+                    # Find index with max alignment with phase jumps
+                    pulse_max = np.max(pulse_finder, axis=-1)
+                    tol = 0.9
+                    imin = np.argmax(pulse_finder > tol*pulse_max, axis=-1)
+                    imax = n_pulse_pts-1 - np.argmax(pulse_finder[...,::-1] > tol*pulse_max, axis=-1)
+                    ip0 = np.round( (imin+imax)/2 ).astype(int)
+
+                n_pulses = int( (n_pts - 1 - ip0) / n_pulse_pts ) 
     
                 # Flatten arrays to be in the form [runs,t]
                 # Then generate array of selected phase values at bin points
@@ -407,18 +425,32 @@ class Data:
                 phase_flat_aligned_vals = np.reshape(
                     phase[..., ip0:ip0+n_pts_new], (n_runs,n_pts_new)
                     )
-                print(ip0)
             else:
                 # Assume runs are not aligned to each other
                 # Find where pulses are
-                i_pulse = np.argmax(phase[...,1:]-phase[...,:-1], axis=-1)
-                n_pulse_pts = round(t_pulse/cav_phase.dt)
-                n_pts = phase.shape[-1]
-    
-                # Find bin points which align with cavity pulses
-                ip0 = np.round( i_pulse % n_pulse_pts ).astype(int)
-                n_pulses = int( (n_pts - 1 - np.amax(ip0)) / n_pulse_pts )
-                n_runs = np.prod(phase.shape[:-1])
+                if single_index_align == True:
+                    i_pulse = np.argmax(phase[...,1:]-phase[...,:-1], axis=-1)  
+                    
+                    # Find bin points which align with cavity pulses
+                    ip0 = np.round( i_pulse % n_pulse_pts ).astype(int)
+                else:
+                    # Collapse into trace of t_pulse
+                    phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
+                                             phase[...,1:]-phase[...,:-1]), axis = -1)
+                    n_pulses_temp = int(n_pts/n_pulse_pts)
+                    pulse_finder = np.reshape(
+                        phase_diff[..., :n_pulses_temp*n_pulse_pts]**2,
+                        (n_runs*n_pulses_temp, n_pulse_pts)
+                        ).mean(axis=-2)
+                    
+                    # Find index with max alignment with phase jumps
+                    pulse_max = np.max(pulse_finder, axis=-1)
+                    tol = 0.9
+                    imin = np.argmax(pulse_finder > tol*pulse_max, axis=-1)
+                    imax = n_pulse_pts-1 - np.argmax(pulse_finder[...,::-1] > tol*pulse_max, axis=-1)
+                    ip0 = np.round( (imin+imax)/2 ).astype(int)
+
+                n_pulses = int( (n_pts - 1 - np.amax(ip0)) / n_pulse_pts ) 
     
                 # Flatten arrays to be in the form [runs,t]
                 # Then generate array of selected phase values at bin points
@@ -428,7 +460,6 @@ class Data:
                 for run in range(n_runs):
                     i0 = ip0_flat[run]
                     phase_flat_aligned_vals[run] = phase_flat[run, i0:i0+n_pulses*n_pulse_pts]
-                print(ip0)
 
             # Construct phase object with aligned pulses
             t_aligned = cav_phase.t[:n_pulses*n_pulse_pts]
@@ -446,6 +477,10 @@ class Data:
             cav_freq_vals = cav_freq_vals_bins \
                 .reshape(phase.shape[:-1] + (n_bins,))
             bin_times = cav_phase.t[0] + self.params.t_bin * (0.5 + np.arange(n_bins))
+        
+        # Subtract bare cavity frequency
+        if self.fb is not None:
+            cav_freq_vals -= self.fb[:,None,None]
         
         if collapse == True:
             # Collapse (seq,run) indices to give (run,bin)

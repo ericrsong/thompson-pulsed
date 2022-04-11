@@ -66,7 +66,7 @@ def keysight_hsa_csv(file):
             if line[0] == 'Frequency(Hz)':
                 num_cols = len(line) - 1
                 in_header = False
-                header_names = line[1:]
+                header_names = line[1:-1]
                 continue
             elif in_header:
                 i += 1
