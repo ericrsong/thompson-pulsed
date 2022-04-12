@@ -161,6 +161,7 @@ class Experiment:
                     if (preseq_cav is not None) \
                     else np.array([seq_cav_runs[:premeasure]])
                 seq_cav_runs = seq_cav_runs[premeasure:]
+                seq_atom_runs = seq_atom_runs[premeasure:]
             
             # Check for postmeasure. postseq_cav.shape = (seq, run, t)
             if postmeasure > 0 and seq_cav_runs.shape[0] > postmeasure:
@@ -169,6 +170,7 @@ class Experiment:
                     if (postseq_cav is not None) \
                     else np.array([seq_cav_runs[-postmeasure:]])
                 seq_cav_runs = seq_cav_runs[:-postmeasure]
+                seq_atom_runs = seq_atom_runs[:-postmeasure]
                 
             # Check for interleaved premeasure. preseq_cav.shape = (seq, run, t)
             if premeasure_interleaved:
@@ -177,6 +179,7 @@ class Experiment:
                     if (preseq_cav is not None) \
                     else np.array([seq_cav_runs[::2]])
                 seq_cav_runs = seq_cav_runs[1::2]
+                seq_atom_runs = seq_atom_runs[1::2]
                 
             # Add remaining runs from sequence to the full arrays. (seq, run, t)
             if atom_runs.size > 0:
@@ -503,20 +506,26 @@ class Data:
         """
         if self.atom_runs is None:
             raise Exception('atom_runs was not set!')
+
+        # Collapse atom traces
+        atom_runs_flat = traces.Time_Multitrace(self.atom_runs.t, np.reshape(self.atom_runs.V, 
+            (np.prod(self.atom_runs.V.shape[:-1]), self.atom_runs.V.shape[-1])
+            ))
             
         # Find the phase reference pulse (assume S/N > 1)
         trig_level = 0.6
-        V = self.atom_runs.V - np.mean(self.atom_runs.V, axis=-1, keepdims=True)
+        V = atom_runs_flat.V - np.mean(atom_runs_flat.V, axis=-1, keepdims=True)
         trig_idxs = np.argmax( 
-            V > trig_level * V.max(axis=1, keepdims=True),
-            axis = 1)
+            V > trig_level * V.max(axis=-1, keepdims=True),
+            axis = -1)
         
         # Get time bin for phase reference pulse using advanced indexing
         ref_pulse_frac = 0.8
         n_bin_pts = round(self.params.t_drive / self.params.dt * ref_pulse_frac)
-        ref_pulse_slices = trig_idxs[:,None] + np.arange(n_bin_pts)
+        ref_pulse_slices = trig_idxs[..., None] + np.arange(n_bin_pts)
+        # V[[..., xk, ...], [..., yk, ...]] = [..., V[xk,yk], ...]
         ref_pulse_V = V[np.arange(V.shape[0])[:,None], ref_pulse_slices]
-        ref_pulse_t = self.atom_runs.t[ref_pulse_slices]
+        ref_pulse_t = atom_runs_flat.t[ref_pulse_slices]
         
         # plt.figure()
         # for i in range(5):

@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 
 import os
 
+# TESTING ONLY: Remove package from path when done
+sys.path.remove('../src')
+
 """
 Define files to import as sequences of the experiment
 """
@@ -40,6 +43,7 @@ params.t_run = 50 * 1e-6        # 50 us
 params.t_bin = 0.5 * 1e-6       # 0.5 us
 params.t_drive = 0.5 * 1e-6     # 0.5 us
 params.t_fft_pad = 100 * 1e-6   # 100 us
+params.t_cav_pulse = 5 * 1e-6   # 5 us
 params.f0_cav = 10 * 1e6        # 10 MHz
 params.f0_atom = 10 * 1e6       # 10 MHz
 params.fft_fit = e3l.sinc_symm_fitter(params.t_bin)
@@ -65,15 +69,15 @@ expt.preprocess()
 """
 Cavity resonance frequency probe
 """
-cav_freqs = expt.data.track_cav_frequency_iq()
-cav_freqs_mean = np.mean(cav_freqs.V, axis=0)
-cav_freqs_stdmean = np.std(cav_freqs.V, axis=0) / np.sqrt(cav_freqs.V.shape[0])
+# cav_freqs = expt.data.track_cav_frequency_iq()
+# cav_freqs_mean = np.mean(cav_freqs.V, axis=0)
+# cav_freqs_stdmean = np.std(cav_freqs.V, axis=0) / np.sqrt(cav_freqs.V.shape[0])
+
+# plt.figure()
+# plt.errorbar(cav_freqs.t, cav_freqs_mean, cav_freqs_stdmean)
 
 plt.figure()
-plt.errorbar(cav_freqs.t, cav_freqs_mean, cav_freqs_stdmean)
-
-plt.figure()
-for atom_run in expt.data.atom_runs.V[:10, ...]:
+for atom_run in expt.data.atom_runs.V[0, :10, ...]:
     plt.plot(expt.data.atom_runs.t, atom_run)
     
 """
@@ -92,7 +96,3 @@ for i in range(10):
 
 plt.figure()
 plt.plot(atom_demod.t, np.mean(atom_demod.V[:25,...], axis=0))
-
-
-# TESTING ONLY: Remove package from path when done
-sys.path.remove('../src')

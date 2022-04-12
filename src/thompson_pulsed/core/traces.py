@@ -279,7 +279,7 @@ class Time_Multitrace:
         
         # Generate 4th order Butterworth filter with cutoff at demod frequency
         if not f_cutoff:
-            f_cutoff = f_demod
+            f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
         f_nyquist = 1/(2 * self.dt)
         wn = f_cutoff / f_nyquist
         n = order
