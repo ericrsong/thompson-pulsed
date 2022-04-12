@@ -266,8 +266,16 @@ class Time_Multitrace:
         -------
         MT_Phasor(Time_Multitrace), representing demodulated phasors
         """
-        LO_x = np.cos(2*np.pi*f_demod*self.t)
-        LO_y = np.sin(2*np.pi*f_demod*self.t)
+        if type(f_demod) == np.ndarray and f_demod.shape == self.V.shape[:-1]:
+            # Different f_demod for each run of the Multitrace
+            LO_x = np.cos(2*np.pi*f_demod[..., None]*self.t)
+            LO_y = np.sin(2*np.pi*f_demod[..., None]*self.t)
+        elif type(f_demod) == int or type(f_demod) == float:
+            # Same f_demod for each run of the Multitrace
+            LO_x = np.cos(2*np.pi*f_demod*self.t)
+            LO_y = np.sin(2*np.pi*f_demod*self.t)
+        else:
+            raise TypeError("f_demod must be number or ndarray")
         
         # Generate 4th order Butterworth filter with cutoff at demod frequency
         if not f_cutoff:
