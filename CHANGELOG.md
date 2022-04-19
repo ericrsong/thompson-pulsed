@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `e3l.params.demod_smoother()` no longer required
+
+## [0.5.0] - 2022-04-19
+
+### Added
+- `premeasure_interleaved` option for `e3l.track_cav_frequency_iq()`
+- `binned_average()` method for `tp.Time_Multitrace`, returning another `tp.Time_Multitrace` object with coarser time step
+- `tp.parsers.keysight_hsa_csv()` function for parsing Keysight RSA traces
+- Incomplete `tp.parsers.labview_log()` function for reading in LabVIEW parameter values in post-processing
+
+### Changed
+- `e3l.track_cav_frequency_iq()` now estimates frequency by measuring slopes in the `tp.MT_Phase` object generated from the demodulated cavity phasor. Extra options added to function for variably sophisticated processing of such slopes
+- `e3l.demod_atom_trace()` now uses IQ demodulation instead of multiplication with a cosine
+
+### Deprecated
+- Old `e3l.demod_atom_trace()` function still exists but was renamed to `e3l.demod_atom_trace_OLD()` and is deprecated
+
+### Fixed
+- In `e3l_watchdog_test.py`, `event_handler.events` list no longer suffers from race condition leading to an uncaught exception
+- `e3l.demod_atom_trace()` now works with `tp.Time_Multitrace` objects
+
+### Removed
+- Old `e3l.Cav_Phase` object no longer exists (it went unused)
+
 ## [0.4.0] - 2022-02-22
 
 ### Added
@@ -71,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser module in `/core/` containing a single parsing function for the NI PCI-5105 oscilloscope board
 - Experiment-specific analysis code for the 3L experiment, stored in `/expts/three_level.py`
 
-[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.1.0...v0.2.0

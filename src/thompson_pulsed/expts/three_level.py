@@ -239,7 +239,7 @@ class Parameters:
         self.f0_cav = None
         self.f0_atom = None
         # self.fft_fit = None
-        self.demod_smoother = None
+        # self.demod_smoother = None
         
     def _all_params_defined(self):
         for attr in vars(self):
