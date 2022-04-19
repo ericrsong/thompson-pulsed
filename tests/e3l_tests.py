@@ -24,7 +24,8 @@ sys.path.remove('../src')
 """
 Define files to import as sequences of the experiment
 """
-zpad, n_seqs = 0, 10
+zpad = 0
+n_seq_0, n_seqs = 0, 10
 
 file_title = "3L_TEST_NS"
 folder = 'example_data/e3l'
@@ -55,7 +56,7 @@ params.demod_smoother = lambda V: \
 Create experiment object and load with sequences
 """
 expt = e3l.Experiment(params)
-for i in range(n_seqs):
+for i in range(n_seq_0, n_seq_0 + n_seqs):
     file_num = str(i).zfill(zpad)
     file_name = file_title + file_num + '.txt'
     file = os.path.join(folder, file_name)

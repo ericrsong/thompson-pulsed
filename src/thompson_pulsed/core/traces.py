@@ -386,6 +386,15 @@ class MT_Phasor(Time_Multitrace):
         MT_Phase(Time_Multitrace) with same shape as self
         """
         return( MT_Phase(self.t, np.angle(self.V), unwrap=unwrap) )
+    
+    def mag(self):
+        return( Time_Multitrace(self.t, np.abs(self.V), dV=self.dV) )
+    
+    def real(self):
+        return( Time_Multitrace(self.t, np.real(self.V), dV=self.dV) )
+    
+    def imag(self):
+        return( Time_Multitrace(self.t, np.imag(self.V), dV=self.dV) )
 
 class MT_Phase(Time_Multitrace):
     def __init__(self, t, V, dV=None, unwrap=True):

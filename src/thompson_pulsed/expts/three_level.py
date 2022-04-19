@@ -500,14 +500,57 @@ class Data:
             # Default: return MT
             return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
     
-    def demod_atom_trace(self):
+    def demod_atom_trace(self, t_align):
         """
-        # TODO: different array shape from before (seq,run) vs (run)
+        IQ demodulates atom time traces and phase-aligns them at a specified
+        time.
+        
+        Parameters
+        ----------
+        t_align : float
+            Specifies what time to align trace phases at. The phase is averaged
+            over a time specified in self.params.t_drive
+
+        Returns
+        -------
+        atom_demod : tp.MT_Phasor
+            .t : 1D np array [t]
+            .V : 2D np array [run,t]
+        """
+        if self.atom_runs is None:
+            raise Exception('atom_runs was not set!')
+            
+        # Collapse atom traces to (run, t) dimensions and subtract out mean
+        V = np.reshape(self.atom_runs.V, 
+                (np.prod(self.atom_runs.V.shape[:-1]), self.atom_runs.V.shape[-1])
+                )
+        V -= np.mean(V, axis=-1)[:, None]
+        atom_runs_flat = traces.Time_Multitrace(self.atom_runs.t, V)
+        
+        # Demodulate at drive frequency (note: this is the mixed down atomic frequency)
+        f0 = self.params.f0_atom
+        atom_demod_raw = traces.Time_Multitrace(atom_runs_flat.t, V).iq_demod(f0)
+        demod_phase = atom_demod_raw.phase()
+        
+        # Align phases at drive pulse
+        di_ref = round(self.params.t_drive/self.params.dt)
+        i0_ref = round(t_align/self.params.dt)
+        phase_refs = np.mean(demod_phase.V[..., i0_ref:i0_ref+di_ref], axis=-1)
+        atom_demod = traces.MT_Phasor(
+            atom_demod_raw.t, atom_demod_raw.V * np.exp(-1j * phase_refs)[..., None]
+            )
+        
+        return( atom_demod )
+    
+    def demod_atom_trace_OLD(self):
+        """
+        OLD FUNCTION. Demodulates with a fixed phase LO, loses 1/2 of the
+        signal-to-noise compared to a full IQ demodulation (new function).
         """
         if self.atom_runs is None:
             raise Exception('atom_runs was not set!')
 
-        # Collapse atom traces
+        # Collapse atom traces to (run, t) dimensions
         atom_runs_flat = traces.Time_Multitrace(self.atom_runs.t, np.reshape(self.atom_runs.V, 
             (np.prod(self.atom_runs.V.shape[:-1]), self.atom_runs.V.shape[-1])
             ))
