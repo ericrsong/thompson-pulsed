@@ -8,22 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- `e3l.params.demod_smoother()` no longer required
+- `demod_smoother()` no longer required in `e3l.Parameters` object
 
 ## [0.5.0] - 2022-04-19
 
 ### Added
-- `premeasure_interleaved` option for `e3l.track_cav_frequency_iq()`
+- `premeasure_interleaved` option for `e3l.Experiment.preprocess()` allows premeasure runs to be interleaved with data runs
 - `binned_average()` method for `tp.Time_Multitrace`, returning another `tp.Time_Multitrace` object with coarser time step
 - `tp.parsers.keysight_hsa_csv()` function for parsing Keysight RSA traces
 - Incomplete `tp.parsers.labview_log()` function for reading in LabVIEW parameter values in post-processing
 
 ### Changed
-- `e3l.track_cav_frequency_iq()` now estimates frequency by measuring slopes in the `tp.MT_Phase` object generated from the demodulated cavity phasor. Extra options added to function for variably sophisticated processing of such slopes
-- `e3l.demod_atom_trace()` now uses IQ demodulation instead of multiplication with a cosine
+- `e3l.Data.track_cav_frequency_iq()` now estimates frequency by measuring slopes in the `tp.MT_Phase` object generated from the demodulated cavity phasor. Extra options added to function for variably sophisticated processing of such slopes
+- `e3l.Data.demod_atom_trace()` now uses IQ demodulation instead of multiplication with a cosine
 
 ### Deprecated
-- Old `e3l.demod_atom_trace()` function still exists but was renamed to `e3l.demod_atom_trace_OLD()` and is deprecated
+- Old `e3l.Data.demod_atom_trace()` function still exists but was renamed to `e3l.Data.demod_atom_trace_OLD()` and is deprecated
 
 ### Fixed
 - In `e3l_watchdog_test.py`, `event_handler.events` list no longer suffers from race condition leading to an uncaught exception
