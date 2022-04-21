@@ -76,7 +76,8 @@ class Experiment:
         self.sequences.append(seq)
         
     def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
-                   premeasure_interleaved = False, postmeasure = 0):
+                   premeasure_interleaved = False, postmeasure = 0,
+                   n_warmups = 0):
         """
         Given loaded sequences, preprocess data contained inside and store in
         expt.data.
@@ -101,6 +102,9 @@ class Experiment:
         postmeasure : int, optional
             Specifies number of postmeasurement runs performed in sequence. 
             Default is 0.
+        n_warmups : int, optional
+            Specifies the number of measurement runs which should be thrown
+            out. Default is 0.
 
         Returns
         -------
@@ -225,6 +229,10 @@ class Experiment:
                     fi_runs.t, np.mean(fi_runs.V, axis=1)
                 )
                 fi = np.average(fi_seqs.V, axis=-1)
+        
+        # Throw out warmup traces
+        cav_runs = cav_runs[: ,n_warmups:, :]
+        atom_runs = atom_runs[:, n_warmups:, :]
         
         # Assign to data object
         self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb)
