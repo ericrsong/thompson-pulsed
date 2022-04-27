@@ -368,6 +368,40 @@ class Time_Multitrace:
             dV_averaged = np.std(bin_MT.V, axis=-1)/np.sqrt(bin_MT.V.shape[-1])
         
         return( type(self)(t_averaged, V_averaged, dV=dV_averaged) )
+    
+    def truncate(self, t_min=None, t_max=None):
+        """
+        Truncates the Time_Multitrace arrays to include only times t such that
+        t_min <= t <= t_max.
+        
+        Parameters
+        ----------
+        t_min : float, optional
+            Lower bound for truncation. If t_min is None, set t_min to t[0].
+            Default is None.
+        t_max : float, optional
+            Upper bound for truncation. If t_max is None, set t_max to t[-1].
+            Default is None.
+        
+        Returns
+        -------
+        Time_Multitrace, representing a time-truncated version of self.
+        """
+        if t_min is None:
+            t_min = self.t[0]
+        if t_max is None:
+            t_max = self.t[-1]
+            
+        idx = np.where((self.t >= t_min) & (self.t <= t_max))
+            
+        if self.dim > 1:
+            V = self.V[...,idx]
+            dV = None if self.dV is None else self.dV[...,idx]
+        else:
+            V = self.V[idx]
+            dV = None if self.dV is None else self.dV[idx]
+            
+        return( type(self)(self.t[idx], V, dV=dV) )
         
         
 class MT_Phasor(Time_Multitrace):
