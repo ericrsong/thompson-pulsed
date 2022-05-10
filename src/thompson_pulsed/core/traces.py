@@ -208,7 +208,59 @@ class Time_Multitrace:
         t = self.t[i0:i0+n_bin_pts]
         
         return( type(self)(t, V) )
+
+    def binned_average(self, t_bin, use_weights=True):
+        """
+        Assuming an evenly-spaced array, time-bins an array and then averages
+        points within that bin, returning a Time_Multitrace across the full
+        time series with fewer, averaged points.
+        
+        Parameters
+        ----------
+        t_bin : float
+            Time window for binning and averaging. Units the same as self.t
+        use_weights: bool, optional
+            Determines whether or not to weight data points when averaging.
+            If True, attempts to define w = 1/dV**2 and otherwise uses equal
+            weighting. If False, uses equal weighting. Default is True.
+        
+        Returns
+        -------
+        Time_Multitrace, representing a binned average of self.
+        """
+        bin_MT = self.bin_trace(t_bin)
+        n_bins = bin_MT.V.shape[-2]
+        n_binpts = bin_MT.V.shape[-1]
+        t_bin_actual = n_binpts * self.dt
+        
+        t_averaged = self.t[0] + t_bin_actual * (1/2 + np.arange(n_bins))
+        if (self.dV is not None) and (0 not in self.dV) and use_weights: 
+            V_averaged = np.average(bin_MT.V, axis=-1, weights=1/bin_MT.dV**2)
+            dV_averaged = 1/np.sqrt(np.sum(1/bin_MT.dV**2, axis=-1))
+        else:
+            V_averaged = np.average(bin_MT.V, axis=-1)
+            dV_averaged = np.std(bin_MT.V, axis=-1)/np.sqrt(bin_MT.V.shape[-1])
+        
+        return( type(self)(t_averaged, V_averaged, dV=dV_averaged) )
     
+    def collapse(self):
+        """
+        Returns a MT with the same data as self, but with all non-time
+        dimensions collapsed into a single dimension. Reshaping is done with
+        np.reshape(), which maintains dictionary order in the indices.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Class of type self (base class: Time_Multitrace)
+        """
+        new_shape = (np.prod(self.V.shape[:-1]), self.V.shape[-1])
+        V_new = np.reshape(self.V, new_shape)
+        dV_new = None if (self.dV is None) else (np.reshape(self.dV, new_shape))
+        return( type(self)(self.t, V_new, dV_new) )
+
     def fft(self, t_pad=None):
         """
         Returns a Frequency Multitrace corresponding to the given time
@@ -334,40 +386,6 @@ class Time_Multitrace:
         dV_avg = np.pad(1/np.sqrt(w_trunc), pad_width_V, mode='edge')
         
         return( type(self)(self.t, V_avg, dV=dV_avg) )
-    
-    def binned_average(self, t_bin, use_weights=True):
-        """
-        Assuming an evenly-spaced array, time-bins an array and then averages
-        points within that bin, returning a Time_Multitrace across the full
-        time series with fewer, averaged points.
-        
-        Parameters
-        ----------
-        t_bin : float
-            Time window for binning and averaging. Units the same as self.t
-        use_weights: bool, optional
-            Determines whether or not to weight data points when averaging.
-            If True, attempts to define w = 1/dV**2 and otherwise uses equal
-            weighting. If False, uses equal weighting. Default is True.
-        
-        Returns
-        -------
-        Time_Multitrace, representing a binned average of self.
-        """
-        bin_MT = self.bin_trace(t_bin)
-        n_bins = bin_MT.V.shape[-2]
-        n_binpts = bin_MT.V.shape[-1]
-        t_bin_actual = n_binpts * self.dt
-        
-        t_averaged = self.t[0] + t_bin_actual * (1/2 + np.arange(n_bins))
-        if (self.dV is not None) and (0 not in self.dV) and use_weights: 
-            V_averaged = np.average(bin_MT.V, axis=-1, weights=1/bin_MT.dV**2)
-            dV_averaged = 1/np.sqrt(np.sum(1/bin_MT.dV**2, axis=-1))
-        else:
-            V_averaged = np.average(bin_MT.V, axis=-1)
-            dV_averaged = np.std(bin_MT.V, axis=-1)/np.sqrt(bin_MT.V.shape[-1])
-        
-        return( type(self)(t_averaged, V_averaged, dV=dV_averaged) )
     
     def truncate(self, t_min=None, t_max=None):
         """
