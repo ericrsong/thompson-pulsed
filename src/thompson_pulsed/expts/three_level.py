@@ -242,12 +242,9 @@ class Parameters:
         self.t_run = None
         self.t_bin = None
         self.t_drive = None
-        # self.t_fft_pad = None
         self.t_cav_pulse = None
         self.f0_cav = None
         self.f0_atom = None
-        # self.fft_fit = None
-        # self.demod_smoother = None
         
     def _all_params_defined(self):
         for attr in vars(self):
@@ -549,81 +546,3 @@ class Data:
             )
         
         return( atom_demod )
-    
-    def demod_atom_trace_OLD(self):
-        """
-        OLD FUNCTION. Demodulates with a fixed phase LO, loses 1/2 of the
-        signal-to-noise compared to a full IQ demodulation (new function).
-        """
-        if self.atom_runs is None:
-            raise Exception('atom_runs was not set!')
-
-        # Collapse atom traces to (run, t) dimensions
-        atom_runs_flat = traces.Time_Multitrace(self.atom_runs.t, np.reshape(self.atom_runs.V, 
-            (np.prod(self.atom_runs.V.shape[:-1]), self.atom_runs.V.shape[-1])
-            ))
-            
-        # Find the phase reference pulse (assume S/N > 1)
-        trig_level = 0.6
-        V = atom_runs_flat.V - np.mean(atom_runs_flat.V, axis=-1, keepdims=True)
-        trig_idxs = np.argmax( 
-            V > trig_level * V.max(axis=-1, keepdims=True),
-            axis = -1)
-        
-        # Get time bin for phase reference pulse using advanced indexing
-        ref_pulse_frac = 0.8
-        n_bin_pts = round(self.params.t_drive / self.params.dt * ref_pulse_frac)
-        ref_pulse_slices = trig_idxs[..., None] + np.arange(n_bin_pts)
-        # V[[..., xk, ...], [..., yk, ...]] = [..., V[xk,yk], ...]
-        ref_pulse_V = V[np.arange(V.shape[0])[:,None], ref_pulse_slices]
-        ref_pulse_t = atom_runs_flat.t[ref_pulse_slices]
-        
-        # plt.figure()
-        # for i in range(5):
-        #     trace = traces.Time_Multitrace(ref_pulse_t[i,...], ref_pulse_V[i,...]) \
-        #                     .fft(t_pad = self.params.t_fft_pad)
-        #     plt.plot(trace.f, np.abs(trace.V)**2)
-        
-        """
-        The fit seems like the easiest way to get phase information
-        The fit doesn't return a very reliable measure of the beat frequency
-        *Idea 1: don't measure frequency, assume a frequency. We need to be
-            accurate to much better than 1/t_run, but if t_run is 10us
-            (realistic) then we only need a frequency accuracy of ~10 kHz
-            which we need anyway to probe the atoms properly in MOT stages.
-        Idea 2: start with assumed frequency and find max in fft^2, binned
-            to a +/- tol around f0_atom (say +/- 50 kHz). This will avoid
-            AM peaks (we wouldn't notice AM peaks at 50 kHz anyway).       
-        """
-        # For each run, fit a frequency and phase to the reference pulse
-        # FIX atomic frequency
-        ref_pulse_phi = np.zeros(ref_pulse_V.shape[0])
-        for r in range(ref_pulse_V.shape[0]):
-            try:
-                [pOpt, pCov] = curve_fit(
-                        lambda t,A,phi: cos(t,A,self.params.f0_atom,phi),
-                        ref_pulse_t[r,...], ref_pulse_V[r,...],
-                        p0 = [1, 0]
-                        )
-                ref_pulse_phi[r] = pOpt[1] if pOpt[0]>0 else pOpt[1]+np.pi
-            except RuntimeError:
-                print(f"Fit {r+1} of {ref_pulse_V.shape[0]} failed.")
-                raise
-            # if r == 0:
-            #     plt.figure()
-            #     plt.plot(ref_pulse_t[r], ref_pulse_V[r])
-            #     plt.plot(ref_pulse_t[r], cos(ref_pulse_t[r], pOpt[0], self.params.f0_atom, pOpt[1]))
-            #     print(pOpt)      
-        
-        ref_pulse_f = np.zeros(ref_pulse_V.shape[0]) + self.params.f0_atom
-        
-        # Demodulate traces using fitted (f,phi) on reference pulses
-        t = self.atom_runs.t[None,:]
-        f, phi = ref_pulse_f[:,None], ref_pulse_phi[:,None]
-        
-        local_osc = cos(t, 1, f, phi)
-        
-        V_demod_raw = local_osc * V
-        V_demod = self.params.demod_smoother(V_demod_raw)
-        
-        return(traces.Time_Multitrace(self.atom_runs.t, V_demod))
