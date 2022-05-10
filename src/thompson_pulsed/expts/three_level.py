@@ -115,13 +115,18 @@ class Experiment:
         if not self.sequences:
             raise Exception("Error: no sequences loaded to experiment!")
         
+        ####
         # Process optional args
+        ####
+
+        # OPTIONAL ARG: n_seqs loads in a limited number of sequences
         if not n_seqs or n_seqs > len(self.sequences):
             n_seqs = len(self.sequences)
             
-        if load=='oldest':
+        # OPTIONAL ARG: load specifies in which order to load in sequences
+        if load == 'oldest':
             sequences = self.sequences[:n_seqs]
-        elif load=='newest':
+        elif load == 'newest':
             sequences = self.sequences[-n_seqs:]
         else:
             sequences = self.sequences[-n_seqs:]
@@ -130,6 +135,10 @@ class Experiment:
         if premeasure_interleaved:
             premeasure = 0
         
+        ####
+        # Extract data from specified sequences
+        ####
+
         # Define a single time array for all runs of the experiment
         self.params.dt = self.sequences[0].t[1] - self.sequences[0].t[0]
         i_run = round(self.params.t_run / self.params.dt)
@@ -268,7 +277,7 @@ class Data:
         self.fi = fi
         self.fb = fb
     
-    def track_cav_frequency_iq(self, f_demod = None, out_fmt = 'MT', align = True, collapse = True, \
+    def track_cav_frequency_iq(self, f_demod = None, align = True, collapse = True, \
                                ignore_pulse_bins = True, moving_average = 0):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
@@ -280,12 +289,6 @@ class Data:
         f_demod : float, optional
             Specifies what frequency to demodulate at. If None, f_demod is auto-set
             to self.params.f0_cav. The default is None.
-        out_fmt : str, optional
-            Specifies what format the data is outputted in. All methods other than
-            the default are deprecated.
-            'trace' : returns t, V as two separate np arrays
-            'MT' : returns t, V as a single tp.Time_Multitrace (see below)
-            Default is 'MT'
         align : boolean, optional
             Specifies whether or not to align the time trace bins to a potential
             pulsed cavity probe. If True, looks for the time 0 <= t < t_bin
@@ -495,15 +498,8 @@ class Data:
             new_shape = (np.prod(cav_freq_vals.shape[:-1]),) + cav_freq_vals.shape[-1:]
             cav_freq_vals = np.reshape(cav_freq_vals, new_shape)
         
-        # Choose output format
-        if out_fmt == 'array':
-            # Deprecated: try returning multitrace (MT)
-            return( bin_times, cav_freq_vals )
-        elif out_fmt == 'MT':
-            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
-        else:
-            # Default: return MT
-            return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
+        # Return tp.Time_Multitrace
+        return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
     
     def demod_atom_trace(self, t_align):
         """
