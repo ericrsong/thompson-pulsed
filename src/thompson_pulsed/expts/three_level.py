@@ -147,6 +147,7 @@ class Experiment:
         # Iterate over all sequences
         atom_runs, cav_runs = np.array([]), np.array([])
         preseq_cav, postseq_cav = None, None
+        preseq_atom, postseq_atom = None, None
         for i in range(len(sequences)):
             seq = sequences[i]
             
@@ -173,6 +174,10 @@ class Experiment:
                     np.concatenate((preseq_cav, [seq_cav_runs[:premeasure]]), axis=0) \
                     if (preseq_cav is not None) \
                     else np.array([seq_cav_runs[:premeasure]])
+                postseq_atom = \
+                    np.concatenate((preseq_atom, [seq_atom_runs[:premeasure]]), axis=0) \
+                    if (preseq_atom is not None) \
+                    else np.array([seq_atom_runs[:premeasure]])
                 seq_cav_runs = seq_cav_runs[premeasure:]
                 seq_atom_runs = seq_atom_runs[premeasure:]
             
@@ -182,6 +187,10 @@ class Experiment:
                     np.concatenate((postseq_cav, [seq_cav_runs[-postmeasure:]]), axis=0) \
                     if (postseq_cav is not None) \
                     else np.array([seq_cav_runs[-postmeasure:]])
+                postseq_atom = \
+                    np.concatenate((postseq_atom, [seq_atom_runs[-postmeasure:]]), axis=0) \
+                    if (postseq_atom is not None) \
+                    else np.array([seq_atom_runs[-postmeasure:]])
                 seq_cav_runs = seq_cav_runs[:-postmeasure]
                 seq_atom_runs = seq_atom_runs[:-postmeasure]
                 
@@ -191,6 +200,10 @@ class Experiment:
                     np.concatenate((preseq_cav, [seq_cav_runs[::2]]), axis=0) \
                     if (preseq_cav is not None) \
                     else np.array([seq_cav_runs[::2]])
+                preseq_atom = \
+                    np.concatenate((preseq_atom, [seq_atom_runs[::2]]), axis=0) \
+                    if (preseq_atom is not None) \
+                    else np.array([seq_atom_runs[::2]])
                 seq_cav_runs = seq_cav_runs[1::2]
                 seq_atom_runs = seq_atom_runs[1::2]
                 
@@ -201,46 +214,55 @@ class Experiment:
             else:
                 atom_runs = np.array([seq_atom_runs])
                 cav_runs = np.array([seq_cav_runs])
-               
+        
+        ####
+        # Process premeasure and postmeasure runs
+        ####
+
+        # Load postmeasure into Experiment object
+        self.has_postmeasure = (postseq_cav is not None)
+        self.postmeasure = Data(t, postseq_cav, postseq_atom, self.params) \
+                            if self.has_postmeasure else None
+
         # Process postmeasure. fb.shape = (seq,)
         fb = None
-        if postmeasure > 0:
-            fb_runs = Data(t, postseq_cav, None, self.params) \
-                .track_cav_frequency_iq(collapse=False)
-            if fb_runs.V.shape[1] > 1:
-                # Can calculate statistics for dV
-                fb_seqs = traces.Time_Multitrace(
-                    fb_runs.t, np.mean(fb_runs.V, axis=1),
-                    dV = np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1])
-                )
-                fb = np.average(fb_seqs.V, axis=-1, weights=1/fb_seqs.dV**2)
-            else:
-                # Don't attempt to calculate dV
-                fb_seqs = traces.Time_Multitrace(
-                    fb_runs.t, np.mean(fb_runs.V, axis=1)
-                )
-                fb = np.average(fb_seqs.V, axis=-1)
+        if self.has_postmeasure:
+            fb_runs = self.postmeasure.track_cav_frequency_iq(collapse=False)
+
+            # For each sequence in postmeasure, calculate measured fb(t_bin)
+            fb_t = np.mean(fb_runs.V, axis=1)
+
+            # If there are multiple shots per sequence, get dfb(t_bin)
+            dfb_t = ( np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1]) ) \
+                    if (fb_runs.V.shape[1] > 1) \
+                    else np.ones(fb_t.shape)
+
+            # Calculate single fb for each sequence
+            fb = np.average(fb_t, axis=-1, weights=1/dfb_t**2)
+
+        # Load premeasure into Experiment object
+        self.has_premeasure = (preseq_cav is not None)
+        self.premeasure = Data(t, preseq_cav, preseq_atom, self.params, fb=fb) \
+                            if self.has_premeasure else None
         
         # Process premeasure. fi.shape = (seq,)
         fi = None
-        if premeasure > 0 or premeasure_interleaved:
-            fi_runs = Data(t, preseq_cav, None, self.params, fb=fb) \
-                .track_cav_frequency_iq(collapse=False)
-            if fi_runs.V.shape[1] > 1:
-                fi_seqs = traces.Time_Multitrace(
-                    fi_runs.t, np.mean(fi_runs.V, axis=1),
-                    dV = np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1])
-                )
-                fi = np.average(fi_seqs.V, axis=-1, weights=1/fi_seqs.dV**2)
-            else:
-                # Don't attempt to calculate dV
-                fi_seqs = traces.Time_Multitrace(
-                    fi_runs.t, np.mean(fi_runs.V, axis=1)
-                )
-                fi = np.average(fi_seqs.V, axis=-1)
+        if self.has_premeasure:
+            fi_runs = self.premeasure.track_cav_frequency_iq(collapse=False)
+
+            # For each sequence in premeasure, calculate measured fi(t_bin)
+            fi_t = np.mean(fi_runs.V, axis=1)
+
+            # If there are multiple shots per sequence, get dfi(t_bin)
+            dfi_t = ( np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1]) ) \
+                    if (fi_runs.V.shape[1] > 1) \
+                    else np.ones(fi_t.shape)
+
+            # Calculate single fi for each sequence
+            fi = np.average(fi_t, axis=-1, weights=1/dfi_t**2)
         
         # Throw out warmup traces
-        cav_runs = cav_runs[: ,n_warmups:, :]
+        cav_runs = cav_runs[:, n_warmups:, :]
         atom_runs = atom_runs[:, n_warmups:, :]
         
         # Assign to data object
