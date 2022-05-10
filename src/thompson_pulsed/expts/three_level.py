@@ -492,14 +492,16 @@ class Data:
         # Subtract bare cavity frequency
         if self.fb is not None:
             cav_freq_vals -= self.fb[:,None,None]
+
+        # Build Time_MT object
+        cav_freqs = traces.Time_Multitrace(bin_times, cav_freq_vals)
         
+        # OPTIONAL ARG: collapse (seq, run, t) to (run, t)
         if collapse == True:
-            # Collapse (seq,run) indices to give (run,bin)
-            new_shape = (np.prod(cav_freq_vals.shape[:-1]),) + cav_freq_vals.shape[-1:]
-            cav_freq_vals = np.reshape(cav_freq_vals, new_shape)
+            cav_freqs = cav_freqs.collapse()
         
-        # Return tp.Time_Multitrace
-        return( traces.Time_Multitrace(bin_times, cav_freq_vals) )
+        # Return Time_MT object
+        return( cav_freqs )
     
     def demod_atom_trace(self, t_align):
         """
@@ -521,16 +523,15 @@ class Data:
         if self.atom_runs is None:
             raise Exception('atom_runs was not set!')
             
-        # Collapse atom traces to (run, t) dimensions and subtract out mean
-        V = np.reshape(self.atom_runs.V, 
-                (np.prod(self.atom_runs.V.shape[:-1]), self.atom_runs.V.shape[-1])
-                )
-        V -= np.mean(V, axis=-1)[:, None]
-        atom_runs_flat = traces.Time_Multitrace(self.atom_runs.t, V)
-        
-        # Demodulate at drive frequency (note: this is the mixed down atomic frequency)
+        # Subtract out mean
+        V = self.atom_runs.V - np.mean(self.atom_runs.V, axis=-1)[..., None]
+
+
+        # Collapse dimensions, then IQ demodulate at the mixed down atomic frequency
         f0 = self.params.f0_atom
-        atom_demod_raw = traces.Time_Multitrace(atom_runs_flat.t, V).iq_demod(f0)
+        atom_demod_raw = traces.Time_Multitrace(self.atom_runs.t, V) \
+                            .collapse() \
+                            .iq_demod(f0)
         demod_phase = atom_demod_raw.phase()
         
         # Align phases at drive pulse
