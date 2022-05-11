@@ -525,7 +525,7 @@ class Data:
         # Return Time_MT object
         return( cav_freqs )
     
-    def demod_atom_trace(self, t_align=None):
+    def demod_atom_trace(self, t_align=None, collapse=True):
         """
         IQ demodulates atom time traces and phase-aligns them at a specified
         time.
@@ -536,6 +536,10 @@ class Data:
             Specifies what time to align trace phases at. The phase is averaged
             over a time specified in self.params.t_drive. If None, function does
             not perform phase alignment. Default is None.
+
+        collapse : bool, optional
+            Specifies whether or not to flatten the non-time dimensions of the
+            multitrace. Default is True.
 
         Returns
         -------
@@ -552,9 +556,13 @@ class Data:
 
         # Collapse dimensions, then IQ demodulate at the mixed down atomic frequency
         f0 = self.params.f0_atom
-        atom_demod_raw = traces.Time_Multitrace(self.atom_runs.t, V) \
-                            .collapse() \
-                            .iq_demod(f0)
+        if collapse:
+            atom_demod_raw = traces.Time_Multitrace(self.atom_runs.t, V) \
+                                .collapse() \
+                                .iq_demod(f0)
+        else:
+            atom_demod_raw = traces.Time_Multitrace(self.atom_runs.t, V) \
+                                .iq_demod(f0)            
         demod_phase = atom_demod_raw.phase()
         
         # Align phases at drive pulse
