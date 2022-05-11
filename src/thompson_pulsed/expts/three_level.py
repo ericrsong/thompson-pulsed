@@ -525,16 +525,17 @@ class Data:
         # Return Time_MT object
         return( cav_freqs )
     
-    def demod_atom_trace(self, t_align):
+    def demod_atom_trace(self, t_align=None):
         """
         IQ demodulates atom time traces and phase-aligns them at a specified
         time.
         
         Parameters
         ----------
-        t_align : float
+        t_align : float, optional.
             Specifies what time to align trace phases at. The phase is averaged
-            over a time specified in self.params.t_drive
+            over a time specified in self.params.t_drive. If None, function does
+            not perform phase alignment. Default is None.
 
         Returns
         -------
@@ -557,11 +558,14 @@ class Data:
         demod_phase = atom_demod_raw.phase()
         
         # Align phases at drive pulse
-        di_ref = round(self.params.t_drive/self.params.dt)
-        i0_ref = round(t_align/self.params.dt)
-        phase_refs = np.mean(demod_phase.V[..., i0_ref:i0_ref+di_ref], axis=-1)
-        atom_demod = traces.MT_Phasor(
-            atom_demod_raw.t, atom_demod_raw.V * np.exp(-1j * phase_refs)[..., None]
-            )
+        if t_align is not None:
+            di_ref = round(self.params.t_drive/self.params.dt)
+            i0_ref = round(t_align/self.params.dt)
+            phase_refs = np.mean(demod_phase.V[..., i0_ref:i0_ref+di_ref], axis=-1)
+            atom_demod = traces.MT_Phasor(
+                atom_demod_raw.t, atom_demod_raw.V * np.exp(-1j * phase_refs)[..., None]
+                )
+        else:
+            atom_demod = atom_demod_raw
         
         return( atom_demod )
