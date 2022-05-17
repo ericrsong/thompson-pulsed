@@ -139,145 +139,89 @@ class Experiment:
         # Extract data from specified sequences
         ####
 
-        # Check if first Sequence object has a cavity phase reference (attr: cref)
-        cref_exists = hasattr(self.sequences[0], 'cref')
-
         # Define a single time array for all runs of the experiment
         self.params.dt = self.sequences[0].t[1] - self.sequences[0].t[0]
         i_run = round(self.params.t_run / self.params.dt)
         t = self.params.dt * np.arange(i_run)
 
-        # Iterate over all sequences
-        atom_runs, cav_runs, cref_runs = np.array([]), np.array([]), np.array([])
-        preseq_cav, postseq_cav = None, None
-        preseq_atom, postseq_atom = None, None
-        preseq_cref, postseq_cref = None, None
-        for i in range(len(sequences)):
-            seq = sequences[i]
-            
-            # Extract runs from sequence
-            if not seq.has_triggers:
-                # Assume a single run for each sequence and extract points
-                seq_atom_runs = np.array([seq.atom.V[..., :i_run]])
-                seq_cav_runs = np.array([seq.cav.V[..., :i_run]])
-                if cref_exists:
-                    seq_cref_runs = np.array([seq.cref.V[..., :i_run]])
-            else:
-                # Edge case: redefine i_run if dataset ends abruptly
-                i_run = min(i_run, seq.atom.V.shape[-1] - seq.triggers[-1])
-                
-                # Extract runs from the single sequence using triggers as markers
-                seq_atom_runs = np.array(
-                    [seq.atom.V[..., trig:trig+i_run] for trig in seq.triggers]
-                    )
-                seq_cav_runs = np.array(
-                    [seq.cav.V[..., trig:trig+i_run] for trig in seq.triggers]
-                    )
-                if cref_exists:
-                    seq_cref_runs = np.array(
-                        [seq.cref.V[..., trig:trig+i_run] for trig in seq.triggers]
+        # Define attributes to preprocess
+        attrs = ['cav', 'atom', 'cref']
+        attr_exists = {attr: hasattr(self.sequences[0], attr) for attr in attrs}
+
+        # Initialize containers to sort different types of runs into
+        runs = {attr: np.array([]) for attr in attrs}
+        preseq, postseq = {attr: None for attr in attrs}, {attr: None for attr in attrs}
+
+        # Iterate over attributes
+        for attr in attrs:
+            if not attr_exists[attr]:
+                continue
+
+            # Iterate over all sequences
+            for i in range(len(sequences)):
+                seq = sequences[i]
+                attr_MT = vars(seq)[attr] # Attribute multitrace
+
+                # Extract runs from sequence
+                if not seq.has_triggers:
+                    # Assume a single run for each sequence and extract points
+                    seq_runs = np.array([attr_MT.V[..., :i_run]])
+                else:
+                    # Edge case: redefine i_run if dataset ends abruptly
+                    i_run = min(i_run, attr_MT.V.shape[-1] - seq.triggers[-1])
+                    
+                    # Extract runs from the single sequence using triggers as markers
+                    seq_runs = np.array(
+                        [attr_MT.V[..., trig:trig+i_run] for trig in seq.triggers]
                         )
                 
-            # Check for premeasure. preseq_cav.shape = (seq, run, t)
-            if premeasure > 0 and seq_cav_runs.shape[0] > premeasure:
-                preseq_cav = \
-                    np.concatenate((preseq_cav, [seq_cav_runs[:premeasure]]), axis=0) \
-                    if (preseq_cav is not None) \
-                    else np.array([seq_cav_runs[:premeasure]])
-                preseq_atom = \
-                    np.concatenate((preseq_atom, [seq_atom_runs[:premeasure]]), axis=0) \
-                    if (preseq_atom is not None) \
-                    else np.array([seq_atom_runs[:premeasure]])
+                # Check for premeasure. preseq[attr].shape = (seq, run, t)
+                if premeasure > 0 and seq_runs.shape[0] > premeasure:
+                    preseq[attr] = \
+                        np.concatenate((preseq[attr], [seq_runs[:premeasure]]), axis=0) \
+                        if (preseq[attr] is not None) \
+                        else np.array([seq_runs[:premeasure]])
 
-                # Remove premeasure from data run arrays    
-                seq_cav_runs = seq_cav_runs[premeasure:]
-                seq_atom_runs = seq_atom_runs[premeasure:]
-
-                # Process cavity reference if it exists
-                if cref_exists:
-                    preseq_cref = \
-                        np.concatenate((preseq_cref, [seq_cref_runs[:premeasure]]), axis=0) \
-                        if (preseq_cref is not None) \
-                        else np.array([seq_cref_runs[:premeasure]])
-                    seq_cref_runs = seq_cref_runs[premeasure:]
-            
-            # Check for postmeasure. postseq_cav.shape = (seq, run, t)
-            if postmeasure > 0 and seq_cav_runs.shape[0] > postmeasure:
-                postseq_cav = \
-                    np.concatenate((postseq_cav, [seq_cav_runs[-postmeasure:]]), axis=0) \
-                    if (postseq_cav is not None) \
-                    else np.array([seq_cav_runs[-postmeasure:]])
-                postseq_atom = \
-                    np.concatenate((postseq_atom, [seq_atom_runs[-postmeasure:]]), axis=0) \
-                    if (postseq_atom is not None) \
-                    else np.array([seq_atom_runs[-postmeasure:]])
-
-                # Remove postmeasure from data run arrays  
-                seq_cav_runs = seq_cav_runs[:-postmeasure]
-                seq_atom_runs = seq_atom_runs[:-postmeasure]
-
-                # Process cavity reference if it exists
-                if cref_exists:
-                    postseq_cref = \
-                        np.concatenate((postseq_cref, [seq_cref_runs[-postmeasure:]]), axis=0) \
-                        if (postseq_cref is not None) \
-                        else np.array([seq_cref_runs[-postmeasure:]])
-                    seq_cref_runs = seq_cref_runs[:-postmeasure]
+                    # Remove premeasure from data run arrays    
+                    seq_runs = seq_runs[premeasure:]
                 
-            # Check for interleaved premeasure. preseq_cav.shape = (seq, run, t)
+                # Check for postmeasure. postseq[attr].shape = (seq, run, t)
+                if postmeasure > 0 and seq_runs.shape[0] > postmeasure:
+                    postseq[attr] = \
+                        np.concatenate((postseq[attr], [seq_runs[-postmeasure:]]), axis=0) \
+                        if (postseq[attr] is not None) \
+                        else np.array([seq_runs[-postmeasure:]])
+
+                    # Remove postmeasure from data run arrays  
+                    seq_runs = seq_runs[:-postmeasure]
+                
+                # Check for interleaved premeasure. preseq[attr].shape = (seq, run, t)
+                if premeasure_interleaved:
+                    preseq[attr] = \
+                        np.concatenate((preseq[attr], [seq_runs[::2]]), axis=0) \
+                        if (preseq[attr] is not None) \
+                        else np.array([seq_runs[::2]])
+
+                    # Remove interleaved premeasure from data run arrays
+                    seq_runs = seq_runs[1::2]
+                    
+                # Add remaining runs from sequence to the full arrays. (seq, run, t)
+                runs[attr] = np.concatenate((runs[attr], [seq_runs]), axis=0) \
+                                if (runs[attr].size > 0) \
+                                else np.array([seq_runs])   
+
+            # Throw out warmup traces
+            runs[attr] = runs[attr][:, n_warmups:, :]
             if premeasure_interleaved:
-                preseq_cav = \
-                    np.concatenate((preseq_cav, [seq_cav_runs[::2]]), axis=0) \
-                    if (preseq_cav is not None) \
-                    else np.array([seq_cav_runs[::2]])
-                preseq_atom = \
-                    np.concatenate((preseq_atom, [seq_atom_runs[::2]]), axis=0) \
-                    if (preseq_atom is not None) \
-                    else np.array([seq_atom_runs[::2]])
-
-                # Remove interleaved premeasure from data run arrays
-                seq_cav_runs = seq_cav_runs[1::2]
-                seq_atom_runs = seq_atom_runs[1::2]
-
-                # Process cavity reference if it exists
-                if cref_exists:
-                    preseq_cref = \
-                        np.concatenate((preseq_cref, [seq_cref_runs[::2]]), axis=0) \
-                        if (preseq_cref is not None) \
-                        else np.array([seq_cref_runs[::2]])
-                    seq_cref_runs = seq_cref_runs[1::2]
-                
-            # Add remaining runs from sequence to the full arrays. (seq, run, t)
-            if atom_runs.size > 0:
-                atom_runs = np.concatenate((atom_runs, [seq_atom_runs]), axis=0)
-                cav_runs = np.concatenate((cav_runs, [seq_cav_runs]), axis=0)
-                cref_runs = None if (not cref_exists) \
-                            else np.concatenate((cref_runs, [seq_cref_runs]), axis=0)
-            else:
-                atom_runs = np.array([seq_atom_runs])
-                cav_runs = np.array([seq_cav_runs])
-                cref_runs = None if (not cref_exists) \
-                            else np.array([seq_cref_runs])
-        
-
-        # Throw out warmup traces
-        cav_runs = cav_runs[:, n_warmups:, :]
-        atom_runs = atom_runs[:, n_warmups:, :]
-        if cref_exists:
-            cref_runs = cref_runs[:, n_warmups:, :]
-        if premeasure_interleaved:
-            preseq_cav = preseq_cav[:, n_warmups:, :]
-            preseq_atom = preseq_atom[:, n_warmups:, :]
-            if cref_exists:
-                preseq_cref = preseq_cref[:, n_warmups:, :]
+                preseq[attr] = preseq[attr][:, n_warmups:, :]
 
         ####
         # Process premeasure and postmeasure runs
         ####
 
         # Load postmeasure into Experiment object
-        self.has_postmeasure = (postseq_cav is not None)
-        self.postmeasure = Data(t, postseq_cav, postseq_atom, self.params, cref_runs=postseq_cref) \
+        self.has_postmeasure = (postseq['cav'] is not None)
+        self.postmeasure = Data(t, postseq['cav'], postseq['atom'], self.params, cref_runs=postseq['cref']) \
                             if self.has_postmeasure else None
 
         # Process postmeasure. fb.shape = (seq,)
@@ -297,8 +241,8 @@ class Experiment:
             fb = np.average(fb_t, axis=-1, weights=1/dfb_t**2)
 
         # Load premeasure into Experiment object
-        self.has_premeasure = (preseq_cav is not None)
-        self.premeasure = Data(t, preseq_cav, preseq_atom, self.params, fb=fb, cref_runs=preseq_cref) \
+        self.has_premeasure = (preseq['cav'] is not None)
+        self.premeasure = Data(t, preseq['cav'], preseq['atom'], self.params, fb=fb, cref_runs=preseq['cref']) \
                             if self.has_premeasure else None
         
         # Process premeasure. fi.shape = (seq,)
@@ -318,8 +262,8 @@ class Experiment:
             fi = np.average(fi_t, axis=-1, weights=1/dfi_t**2)
         
         # Assign to data object
-        self.data = Data(t, cav_runs, atom_runs, self.params, fi=fi, fb=fb, \
-                            cref_runs=cref_runs)
+        self.data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
+                            cref_runs=runs['cref'])
             
 class Parameters:
     def __init__(self):
