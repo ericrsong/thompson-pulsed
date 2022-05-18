@@ -277,7 +277,7 @@ class Data:
             if (cref_runs is not None) else None
     
     def track_cav_frequency_iq(self, f_demod = None, align = True, collapse = True, \
-                               ignore_pulse_bins = True, moving_average = 0, use_cref = True):
+                               ignore_pulse_bins = True, use_cref = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -301,10 +301,6 @@ class Data:
             Specifies whether to ignore time bins that occur during a pulse.
             Assumes an integer number of t_bins in a t_cav_pulse. Default is
             True.
-        moving_average: float, optional
-            Specifies what timespan of moving average should be applied to the
-            demodulated phasor, if any. If 0, does not perform an average.
-            Default is 0.
         use_cref : boolean, optional
             Specifies whether to apply phase corrections to the cavity phasors
             using the experiment's cavity reference RF data, if it exists.
@@ -388,8 +384,6 @@ class Data:
             # Bin cavity run traces, subtract mean from each bin, and demodulate
             cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
             cav_phase = cav_runs.iq_demod(f_demod).phase()
-            # if moving_average > 0:
-            #     cav_phase = cav_phase.moving_average(moving_average)
             cav_bins = cav_phase.bin_trace(self.params.t_bin)
                                     
             # Get bin times
