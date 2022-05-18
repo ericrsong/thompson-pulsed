@@ -203,18 +203,18 @@ class Experiment:
         # Process postmeasure. fb.shape = (seq,)
         fb = None
         if self.has_postmeasure:
-            fb_runs = self.postmeasure.track_cav_frequency_iq(collapse=False)
+            fb_seqs = self.postmeasure.track_cav_frequency_iq(avg_sequences=False)
+            fb_tbin, fb_seqs_vals = fb_seqs.t, fb_seqs.V
 
-            # For each sequence in postmeasure, calculate measured fb(t_bin)
-            fb_t = np.mean(fb_runs.V, axis=1)
-
-            # If there are multiple shots per sequence, get dfb(t_bin)
-            dfb_t = ( np.std(fb_runs.V, axis=1)/np.sqrt(fb_runs.V.shape[1]) ) \
-                    if (fb_runs.V.shape[1] > 1) \
-                    else np.ones(fb_t.shape)
+            # Get phasor magnitudes at t_bin values
+            fb_seqs_mag = self.postmeasure._seq_cav_probe_mag()
+            idx_tbin = np.round(
+                    (fb_tbin - fb_seqs_mag.t0) / fb_seqs_mag.dt
+                ).astype(int)
+            fb_seqs_mag2_vals = fb_seqs_mag.V[:, idx_tbin]**2
 
             # Calculate single fb for each sequence
-            fb = np.average(fb_t, axis=-1, weights=1/dfb_t**2)
+            fb = np.average(fb_seqs_vals, axis=-1, weights=fb_seqs_mag2_vals)
 
         # Load premeasure into Experiment object
         self.has_premeasure = (preseq['cav'] is not None)
@@ -224,18 +224,18 @@ class Experiment:
         # Process premeasure. fi.shape = (seq,)
         fi = None
         if self.has_premeasure:
-            fi_runs = self.premeasure.track_cav_frequency_iq(collapse=False)
+            fi_seqs = self.premeasure.track_cav_frequency_iq(avg_sequences=False)
+            fi_tbin, fi_seqs_vals = fi_seqs.t, fi_seqs.V
 
-            # For each sequence in premeasure, calculate measured fi(t_bin)
-            fi_t = np.mean(fi_runs.V, axis=1)
-
-            # If there are multiple shots per sequence, get dfi(t_bin)
-            dfi_t = ( np.std(fi_runs.V, axis=1)/np.sqrt(fi_runs.V.shape[1]) ) \
-                    if (fi_runs.V.shape[1] > 1) \
-                    else np.ones(fi_t.shape)
+            # Get phasor magnitudes at t_bin values
+            fi_seqs_mag = self.premeasure._seq_cav_probe_mag()
+            idx_tbin = np.round(
+                    (fi_tbin - fi_seqs_mag.t0) / fi_seqs_mag.dt
+                ).astype(int)
+            fi_seqs_mag2_vals = fi_seqs_mag.V[:, idx_tbin]**2
 
             # Calculate single fi for each sequence
-            fi = np.average(fi_t, axis=-1, weights=1/dfi_t**2)
+            fi = np.average(fi_seqs_vals, axis=-1, weights=fi_seqs_mag2_vals)
         
         # Assign to data object
         self.data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
@@ -275,8 +275,29 @@ class Data:
         # Cavity phase reference data
         self.cref_runs = traces.Time_Multitrace(t, cref_runs) \
             if (cref_runs is not None) else None
+
+    def _seq_cav_probe_mag(self, f_demod = None):
+        if self.cav_runs is None:
+            raise Exception('cav_runs was not set!')
+        
+        # OPTIONAL ARG: Pull f_demod if not specified
+        if f_demod is None:
+            f_demod = self.params.f0_cav
+            
+        # Demodulate cavity data
+        cav_runs = self.cav_runs
+        cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
+        cav_runs_mag = cav_runs.iq_demod(f_demod).mag()
+
+        # Average over runs. (seq, run, t) -> (seq, t)
+        cav_seqs_mag = traces.Time_Multitrace(cav_runs_mag.t,
+                np.average(cav_runs_mag.V, axis=1)
+            )
+
+        return(cav_seqs_mag)
+
     
-    def track_cav_frequency_iq(self, f_demod = None, align = True, collapse = True, \
+    def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
                                ignore_pulse_bins = True, use_cref = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
@@ -294,9 +315,12 @@ class Data:
             corresponding to the maximum value of the first cavity trace and
             truncates the trace to start at this time, then bins. If False,
             performs no truncation. Default is True.
-        collapse : boolean, optional
-            Specifies whether to collapse all degrees of freedom in the array
-            except for the final two: [run,bin]. Default is True.
+        avg_sequences : boolean, optional
+            Specifies whether to average frequency measurements across sequences
+            in the experiment. If True, returns a Time_MT with dimension [tbin]
+            along with a standard deviation of the mean across sequences in dV.
+            If False, returns a Time_MT with dimension [seq, tbin] with a NoneType
+            value for dV.
         ignore_pulse_bins : boolean, optional
             Specifies whether to ignore time bins that occur during a pulse.
             Assumes an integer number of t_bins in a t_cav_pulse. Default is
@@ -310,7 +334,8 @@ class Data:
         -------
         cav_freqs : tp.Time_Multitrace
             .t : 1D np array [bin]
-            .V : 2D np array [run,bin]
+            .V : 1D np array [bin] or 2D np array [seq,bin] depending on avg_sequences
+            .dV : 1D np array [bin] or None depending on avg_sequences
         """
         if self.cav_runs is None:
             raise Exception('cav_runs was not set!')
@@ -345,6 +370,7 @@ class Data:
             cav_phasor = traces.MT_Phasor(cav_phasor_raw.t,
                                           seq_phasor_avg, dV=seq_phasor_stdmean)
         else:
+            use_cref = False
             cav_phasor = cav_phasor_raw
 
         cav_phase = cav_phasor.phase()
@@ -357,7 +383,7 @@ class Data:
         
         # Which is larger: cav pulse time spacing or time bin length?
         if int(self.params.t_cav_pulse/self.params.t_bin) > 1:
-            n_bin_pts = round( self.params.t_bin/cav_runs.dt )
+            n_bin_pts = round( self.params.t_bin/cav_phasor.dt )
 
             # OPTIONAL ARG: Align to pulses
             # DELETED CODE [see v0.5.0]: option use_phase_jumps = False (instead aligns to max voltage in pulse)
@@ -379,15 +405,14 @@ class Data:
                 i0_pulse = np.round( (imin+imax)/2 ).astype(int)
                 i0 = i0_pulse + int(n_bin_pts/2) # Contain most of jump within a single bin
                 
-                cav_runs = traces.Time_Multitrace(cav_runs.t[i0:], cav_runs.V[...,i0:])
+                cav_phasor = traces.MT_Phasor(cav_phasor.t[i0:], cav_phasor.V[...,i0:])
             
-            # Bin cavity run traces, subtract mean from each bin, and demodulate
-            cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
-            cav_phase = cav_runs.iq_demod(f_demod).phase()
+            # Bin cavity phasor traces
+            cav_phase = cav_phasor.phase()
             cav_bins = cav_phase.bin_trace(self.params.t_bin)
                                     
             # Get bin times
-            bin_times = cav_runs.t[0] + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
+            bin_times = cav_phasor.t[0] + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
             
             # Estimate cavity frequency in bins using linear regression
             cav_freq_vals = cav_bins.frequency()
@@ -395,11 +420,12 @@ class Data:
             # OPTIONAL ARG: Remove pulse bins
             if ignore_pulse_bins and align:                            
                 # Will ignore every [n_pulse_bins]-th bin
-                n_pulse_pts = round( self.params.t_cav_pulse/cav_runs.dt )
+                n_pulse_pts = round( self.params.t_cav_pulse/cav_phasor.dt )
                 n_pulse_bins = round( n_pulse_pts / n_bin_pts )
                 
                 # Delete offending bins
-                pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
+                # pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
+                pulse_slice = slice(0, None, n_pulse_bins)
                 cav_freq_vals = np.delete(cav_freq_vals, pulse_slice, axis=-1)
                 bin_times = np.delete(bin_times, pulse_slice, axis=-1)
         else:
@@ -448,16 +474,25 @@ class Data:
                 .reshape(phase.shape[:-1] + (n_bins,))
             bin_times = cav_phase.t[0] + self.params.t_bin * (0.5 + np.arange(n_bins))
         
+        # If no cavity reference exists, average runs within a sequence
+        if not use_cref:
+            # Average (seq, run, t) to (seq, t)
+            cav_freq_vals = np.average(cav_freq_vals, axis=1)
+        
         # Subtract bare cavity frequency
         if self.fb is not None:
-            cav_freq_vals -= self.fb[:,None,None]
+            cav_freq_vals -= self.fb[:,None]
 
         # Build Time_MT object
         cav_freqs = traces.Time_Multitrace(bin_times, cav_freq_vals)
         
-        # OPTIONAL ARG: collapse (seq, run, t) to (run, t)
-        if collapse == True:
-            cav_freqs = cav_freqs.collapse()
+        # OPTIONAL ARG: average frequency measurements over sequences
+        if avg_sequences is True:
+            freqs_mean = np.average(cav_freqs.V, axis=0)
+            freqs_stdmean = np.std(cav_freqs.V, axis=0)/np.sqrt(cav_freqs.V.shape[0])
+
+            cav_freqs = traces.Time_Multitrace(bin_times,
+                                freqs_mean, dV=freqs_stdmean)
         
         # Return Time_MT object
         return( cav_freqs )
