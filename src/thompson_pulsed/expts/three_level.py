@@ -14,30 +14,6 @@ from scipy.optimize import curve_fit
 
 from ..core import traces
 from ..core.parsers import ni_pci5105
-"""
-Define experiment-specific functions
-"""
-def sinc(x):
-    return(np.sinc(x/np.pi))
-def sinc_symm(f, f0, A, T):
-    return( A*(sinc(np.pi*(f-f0)*T)**2 + sinc(np.pi*(f+f0)*T)**2) )
-def sinc_symm_fitter(T):
-    """
-    Returns a symmetric sinc function, with the sinc width fixed to T.
-    """
-    return( lambda f,f0,A: sinc_symm(f,f0,A,T) )
-def cos(t, A, f, phi):
-    return( A*np.cos(2*np.pi*f*t + phi) )
-def moving_average(V, k):
-    V_sum = np.cumsum(V, dtype=float, axis=-1)
-    V_sum[..., k:] = V_sum[..., k:] - V_sum[..., :-k]
-    shift = int((k-1)/2)
-    V_avg_trunc = V_sum[..., k-1:]/k
-    pad_width = ((0,0),) * (V_avg_trunc.ndim-1) + ((shift, k-shift-1),)
-    return( np.pad(V_avg_trunc, pad_width) )
-def notch(V, f_notch, Q, fs):
-    b, a = signal.iirnotch(f_notch, Q, fs)
-    return( signal.filtfilt(b,a,V,axis=-1) )
 
 """
 Define object classes for experiment
