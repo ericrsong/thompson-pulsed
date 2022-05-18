@@ -354,13 +354,11 @@ class Data:
         n_runs = np.prod(phase.shape[:-1])
         
         if int(self.params.t_cav_pulse/self.params.t_bin) > 1:
-            # OPTIONAL ARG: Align to pulses
             n_bin_pts = round( self.params.t_bin/cav_runs.dt )
-            
-            use_phase_jumps = True
-            if align and use_phase_jumps:
-                # New method for aligning to pulses
-                
+
+            # OPTIONAL ARG: Align to pulses
+            # DELETED CODE [see v0.5.0]: option use_phase_jumps = False (instead aligns to max voltage in pulse)
+            if align:
                 # Collapse into trace of t_pulse
                 phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
                                          phase[...,1:]-phase[...,:-1]), axis = -1)
@@ -379,18 +377,7 @@ class Data:
                 i0 = i0_pulse + int(n_bin_pts/2) # Contain most of jump within a single bin
                 
                 cav_runs = traces.Time_Multitrace(cav_runs.t[i0:], cav_runs.V[...,i0:])
-            elif align:                
-                # Get first trace and find max (corresponding to one of the pulses)
-                idx = (0,) * (cav_runs.dim-1) + (slice(None),)
-                i_pulse = np.argmax(cav_runs.V[idx])
-                
-                # Find offset from t=0 to bin aligned to i0
-                i0 = i_pulse % n_pulse_pts
-                
-                # Truncate the first part of the trace to align to pulses
-                cav_runs = traces.Time_Multitrace(cav_runs.t[i0:], cav_runs.V[...,i0:])
-                # print(f'i0 = {i0}. n_pulse_pts = {n_pulse_pts}. dt = {cav_runs.dt}.')
-            
+
             
             # Bin cavity run traces, subtract mean from each bin, and demodulate
             cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
