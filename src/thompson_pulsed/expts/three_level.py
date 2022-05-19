@@ -409,7 +409,7 @@ class Data:
             elif align and use_cref:
                 # In average magnitude array, find peak and trough of a pulse
                 mag = np.average(cav_phasor.mag().V, axis=0)
-                i_pulse_max = np.argmax(mag)
+                i_pulse_max = n_pulse_pts + np.argmax(mag[n_pulse_pts:])
                 i_pulse_min = i_pulse_max-n_pulse_pts + np.argmin(mag[i_pulse_max-n_pulse_pts:i_pulse_max])
                 
                 # Define i0_pulse to be halfway between min and max
