@@ -379,7 +379,7 @@ class Data:
         t_pulse = self.params.t_cav_pulse
         n_pulse_pts = round( t_pulse/cav_phase.dt )
         n_pts = phase.shape[-1]
-        n_runs = np.prod(phase.shape[:-1])
+        n_runs = np.prod(phase.shape[:-1])        
         
         # Which is larger: cav pulse time spacing or time bin length?
         if int(self.params.t_cav_pulse/self.params.t_bin) > 1:
@@ -387,7 +387,7 @@ class Data:
 
             # OPTIONAL ARG: Align to pulses
             # DELETED CODE [see v0.5.0]: option use_phase_jumps = False (instead aligns to max voltage in pulse)
-            if align:
+            if align and not use_cref:
                 # Collapse into trace of t_pulse
                 phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
                                          phase[...,1:]-phase[...,:-1]), axis = -1)
@@ -396,7 +396,7 @@ class Data:
                     phase_diff[..., :n_pulses_temp*n_pulse_pts]**2,
                     (n_runs*n_pulses_temp, n_pulse_pts)
                     ).mean(axis=-2)
-                
+
                 # Find index with max alignment with phase jumps
                 pulse_max = np.max(pulse_finder, axis=-1)
                 tol = 0.9
@@ -404,6 +404,17 @@ class Data:
                 imax = n_pulse_pts-1 - np.argmax(pulse_finder[...,::-1] > tol*pulse_max, axis=-1)
                 i0_pulse = np.round( (imin+imax)/2 ).astype(int)
                 i0 = i0_pulse + int(n_bin_pts/2) # Contain most of jump within a single bin
+                
+                cav_phasor = traces.MT_Phasor(cav_phasor.t[i0:], cav_phasor.V[...,i0:])
+            elif align and use_cref:
+                # In average magnitude array, find peak and trough of a pulse
+                mag = np.average(cav_phasor.mag().V, axis=0)
+                i_pulse_max = np.argmax(mag)
+                i_pulse_min = i_pulse_max-n_pulse_pts + np.argmin(mag[i_pulse_max-n_pulse_pts:i_pulse_max])
+                
+                # Define i0_pulse to be halfway between min and max
+                i0_pulse = int((i_pulse_max + i_pulse_min)/2) % n_pulse_pts
+                i0 = i0_pulse + int(n_bin_pts/2)
                 
                 cav_phasor = traces.MT_Phasor(cav_phasor.t[i0:], cav_phasor.V[...,i0:])
             
@@ -425,7 +436,7 @@ class Data:
                 
                 # Delete offending bins
                 # pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
-                pulse_slice = slice(0, None, n_pulse_bins)
+                pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
                 cav_freq_vals = np.delete(cav_freq_vals, pulse_slice, axis=-1)
                 bin_times = np.delete(bin_times, pulse_slice, axis=-1)
         else:
