@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2022-05-20
+
+### Added
+- `n_warmups` option for `e3l.Experiment.preprocess()` throws out a certain number of initial runs
+- `truncate()` method for `tp.Time_Multitrace` returns another `tp.Time_Multitrace` with restricted time domain
+- `collapse()` method for `tp.Time_Multitrace` returns another `tp.Time_Multitrace` with all non-time dimensions flattened
+- `e3l.Experiment` objects now support `cref` attributes stored inside a `tp.Sequence`, in addition to `cav`, `atom`, and `trig` attributes. This is a `tp.Multitrace` which acts as a phase reference for the `cav` attribute
+
 ### Changed
 - `demod_smoother()` no longer required in `e3l.Parameters` object
+- `e3l.preprocess()` treats `premeasure` and `postmeasure` data as full `e3l.Data` objects with all associated methods, stored in the `e3l.Experiment` object as `expt.premeasure` and `expt.postmeasure` attributes
+- Phase alignment and dimension collapsing in `e3l.Data.demod_atom_trace()` are now optional
+- `e3l.Experiment.preprocess()` code cleaned up to iterate over `tp.Sequence` attributes dynamically
+- For `e3l.Experiment` objects with `cref` data, `e3l.Data.track_cav_frequency_iq()` now detects cavity probe pulse times using an averaged phasor magnitude, which improves the detection reliability
+
+### Removed
+- Old `e3l.Data.demod_atom_trace()` function no longer exists
+- `out_fmt` option for `e3l.Data.track_cav_frequency_iq()` no longer exists. Now the function always outputs a `tp.Time_Multitrace` object
+- Several Boolean options hard-coded in `e3l.Data.track_cav_frequency_iq()` no longer exist
+- Multiple standalone functions in `three_level.py` no longer exist
 
 ## [0.5.0] - 2022-04-19
 
@@ -96,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parser module in `/core/` containing a single parsing function for the NI PCI-5105 oscilloscope board
 - Experiment-specific analysis code for the 3L experiment, stored in `/expts/three_level.py`
 
-[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dylan-j-young/thompson-pulsed/compare/v0.2.0...v0.3.0
