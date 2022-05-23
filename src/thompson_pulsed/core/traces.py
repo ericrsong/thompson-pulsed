@@ -341,7 +341,7 @@ class Time_Multitrace:
         V_x = signal.filtfilt(b,a, self.V*LO_x)
         V_y = signal.filtfilt(b,a, self.V*LO_y)
 
-        return( MT_Phasor(self.t, V_x + 1j * V_y) )
+        return( MT_Phasor(self.t, V_x - 1j * V_y) )
     
     def moving_average(self, t_avg, use_weights=True):
         """
