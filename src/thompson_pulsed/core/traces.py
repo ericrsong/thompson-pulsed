@@ -294,7 +294,7 @@ class Time_Multitrace:
 
         return( Frequency_Multitrace(f, Vf) )
     
-    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None):
+    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None, sign=1):
         """
         Performs an IQ demodulation on the multitrace with frequency f_demod.
         The scipy function filtfilt applies the given filter in the forward-
@@ -341,7 +341,7 @@ class Time_Multitrace:
         V_x = signal.filtfilt(b,a, self.V*LO_x)
         V_y = signal.filtfilt(b,a, self.V*LO_y)
 
-        return( MT_Phasor(self.t, V_x - 1j * V_y) )
+        return( MT_Phasor(self.t, V_x + sign * 1j * V_y) )
     
     def moving_average(self, t_avg, use_weights=True):
         """

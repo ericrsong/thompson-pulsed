@@ -53,7 +53,7 @@ class Experiment:
         
     def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
                    premeasure_interleaved = False, postmeasure = 0,
-                   n_warmups = 0):
+                   n_warmups = 0, avg_fi_shots = True):
         """
         Given loaded sequences, preprocess data contained inside and store in
         expt.data.
@@ -211,7 +211,7 @@ class Experiment:
             idx_tbin = np.round(
                     (fb_tbin - fb_seqs_mag.t0) / fb_seqs_mag.dt
                 ).astype(int)
-            fb_seqs_mag2_vals = fb_seqs_mag.V[:, idx_tbin]**2
+            fb_seqs_mag2_vals = fb_seqs_mag.V[..., idx_tbin]**2
 
             # Calculate single fb for each sequence
             fb = np.average(fb_seqs_vals, axis=-1, weights=fb_seqs_mag2_vals)
@@ -224,17 +224,17 @@ class Experiment:
         # Process premeasure. fi.shape = (seq,)
         fi = None
         if self.has_premeasure:
-            fi_seqs = self.premeasure.track_cav_frequency_iq(avg_sequences=False)
+            fi_seqs = self.premeasure.track_cav_frequency_iq(avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
             fi_tbin, fi_seqs_vals = fi_seqs.t, fi_seqs.V
 
             # Get phasor magnitudes at t_bin values
-            fi_seqs_mag = self.premeasure._seq_cav_probe_mag()
+            fi_seqs_mag = self.premeasure._seq_cav_probe_mag(avg_shots=avg_fi_shots)
             idx_tbin = np.round(
                     (fi_tbin - fi_seqs_mag.t0) / fi_seqs_mag.dt
                 ).astype(int)
-            fi_seqs_mag2_vals = fi_seqs_mag.V[:, idx_tbin]**2
+            fi_seqs_mag2_vals = fi_seqs_mag.V[..., idx_tbin]**2
 
-            # Calculate single fi for each sequence
+            # Calculate single fi for each sequence (or array of shots if avg_shots = False)
             fi = np.average(fi_seqs_vals, axis=-1, weights=fi_seqs_mag2_vals)
         
         # Assign to data object
@@ -276,7 +276,7 @@ class Data:
         self.cref_runs = traces.Time_Multitrace(t, cref_runs) \
             if (cref_runs is not None) else None
 
-    def _seq_cav_probe_mag(self, f_demod = None):
+    def _seq_cav_probe_mag(self, f_demod = None, avg_shots=True):
         if self.cav_runs is None:
             raise Exception('cav_runs was not set!')
         
@@ -290,15 +290,18 @@ class Data:
         cav_runs_mag = cav_runs.iq_demod(f_demod).mag()
 
         # Average over runs. (seq, run, t) -> (seq, t)
-        cav_seqs_mag = traces.Time_Multitrace(cav_runs_mag.t,
-                np.average(cav_runs_mag.V, axis=1)
-            )
-
+        if avg_shots:
+            cav_seqs_mag = traces.Time_Multitrace(cav_runs_mag.t,
+                    np.average(cav_runs_mag.V, axis=1)
+                )
+        else:
+            cav_seqs_mag = cav_runs_mag
+    
         return(cav_seqs_mag)
 
     
     def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
-                               ignore_pulse_bins = True, use_cref = True):
+                               ignore_pulse_bins = True, use_cref = True, avg_shots = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
         with a linear regression to estimate instantaneous frequency. Multiple
@@ -487,13 +490,15 @@ class Data:
         
         # If no cavity reference exists, average runs within a sequence
         if not use_cref:
-            # Average (seq, run, t) to (seq, t)
-            cav_freq_vals = np.average(cav_freq_vals, axis=1)
+            if avg_shots:
+                # Average (seq, run, t) to (seq, t)
+                cav_freq_vals = np.average(cav_freq_vals, axis=1)
         
         # Subtract bare cavity frequency
         if self.fb is not None:
-            cav_freq_vals -= self.fb[:,None]
-
+            cfv_ndim = cav_freq_vals.ndim
+            cav_freq_vals -= self.fb[(..., *([None]*(cfv_ndim-1)) )]
+                
         # Build Time_MT object
         cav_freqs = traces.Time_Multitrace(bin_times, cav_freq_vals)
         
