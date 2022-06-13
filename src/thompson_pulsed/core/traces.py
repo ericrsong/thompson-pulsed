@@ -186,7 +186,7 @@ class Time_Multitrace:
             V_avg = np.average(self.V, axis=axis, weights=weights)
             idx = (slice(None),) * axis + (None,) + (slice(None),) * (self.dim-axis-1)
 
-            dV_avg = np.average((self.V - V_avg[idx]), axis=axis, weights=weights)
+            dV_avg = np.sqrt(np.average((self.V - V_avg[idx])**2, axis=axis, weights=weights))
 
         return( type(self)(self.t, V_avg, dV=dV_avg) )
 
