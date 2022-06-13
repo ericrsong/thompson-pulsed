@@ -161,6 +161,34 @@ class Time_Multitrace:
     def dim(self):
         return len(self.V.shape)
     
+    def average_over(self, axis):
+        """
+        Given a time multitrace and a specific axis, perform a (potentially 
+        weighted) average over that dimension and return a multitrace with one
+        fewer dimension and statistics.
+
+        Parameters
+        ----------
+        axis : int
+            Axis to average over.
+
+        Returns
+        -------
+        Class of type self (base class: Time_Multitrace)
+        """
+        if self.dV is None:
+            # No existing statistics. Generate unweighted average and uncertainty
+            V_avg = np.average(self.V, axis=axis)
+            dV_avg = np.std(self.V, axis=axis) / np.sqrt(self.V.shape[axis])
+        else:
+            # Generate weighted average and stdmean [using biased weighted estimator]
+            weights = 1/self.dV**2
+            V_avg = np.average(self.V, axis=axis, weights=weights)
+            idx = (slice(None),) * axis + (None,) + (slice(None),) * (self.dim-axis-1)
+
+            dV_avg = np.average((self.V - V_avg[idx]), axis=axis, weights=weights)
+
+        return( type(self)(self.t, V_avg, dV=dV_avg) )
 
     def bin_trace(self, t_bin, t0=None):
         """
