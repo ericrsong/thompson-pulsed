@@ -121,7 +121,7 @@ class Experiment:
         t = self.params.dt * np.arange(i_run)
 
         # Define attributes to preprocess
-        attrs = ['cav', 'atom', 'cref']
+        attrs = ['cav', 'atom', 'cref', 'spcm']
         attr_exists = {attr: hasattr(self.sequences[0], attr) for attr in attrs}
 
         # Initialize containers to sort different types of runs into
@@ -239,7 +239,7 @@ class Experiment:
         
         # Assign to data object
         self.data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
-                            cref_runs=runs['cref'])
+                            cref_runs=runs['cref'], spcm_runs=runs['spcm'])
             
 class Parameters:
     def __init__(self):
@@ -260,7 +260,7 @@ class Data:
     """
     Stores preprocessed data. Accessed via the parent Experiment object. 
     """
-    def __init__(self, t, cav_runs, atom_runs, params, fi=None, fb=None, cref_runs=None):
+    def __init__(self, t, cav_runs, atom_runs, params, fi=None, fb=None, cref_runs=None, spcm_runs=None):
         self.t = t
         self.cav_runs = traces.Time_Multitrace(t, cav_runs) \
             if (cav_runs is not None) else None
@@ -275,6 +275,9 @@ class Data:
         # Cavity phase reference data
         self.cref_runs = traces.Time_Multitrace(t, cref_runs) \
             if (cref_runs is not None) else None
+
+        self.spcm_runs = traces.Time_Multitrace(t, spcm_runs) \
+            if (spcm_runs is not None) else None
 
     def _seq_cav_probe_mag(self, f_demod = None, avg_shots=True):
         if self.cav_runs is None:
@@ -565,3 +568,9 @@ class Data:
             atom_demod = atom_demod_raw
         
         return( atom_demod )
+
+    def avg_spcm_traces(self):
+        if self.spcm_runs is None:
+            raise Expection('spcm_runs was not set!')
+
+        return( spcm_runs.average_over(dim=1).average_over(dim=0) )
