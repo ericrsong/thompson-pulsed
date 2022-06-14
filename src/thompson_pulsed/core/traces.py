@@ -438,7 +438,7 @@ class Time_Multitrace:
         if t_max is None:
             t_max = self.t[-1]
             
-        idx = np.where((self.t >= t_min) & (self.t <= t_max))
+        idx = np.where((self.t >= t_min) & (self.t <= t_max))[0]
             
         if self.dim > 1:
             V = self.V[...,idx]
