@@ -469,6 +469,10 @@ class MT_Phasor(Time_Multitrace):
     
     def mag(self):
         return( Time_Multitrace(self.t, np.abs(self.V), dV=self.dV) )
+
+    def mag2(self):
+        return( Time_Multitrace(self.t, np.abs(self.V)**2, 
+            dV = (2*np.abs(self.V) * self.dV) if (self.dV is not None) else None ) )
     
     def real(self):
         return( Time_Multitrace(self.t, np.real(self.V), dV=self.dV) )
