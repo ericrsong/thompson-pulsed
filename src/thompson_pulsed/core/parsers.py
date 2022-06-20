@@ -9,7 +9,7 @@ import pandas as pd
 
 import os
 
-__all__ = ['ni_pci5105', 'ni_pcie7851r_ai', 'keysight_hsa_csv']
+__all__ = ['ni_pci5105', 'ni_pcie7851r_ai', 'keysight_hsa_csv','tektronix_oscilloscope_csv']
 
 def ni_pci5105(file):
     """Uses pandas to load data from a CSV-formatted data file, specifically as
@@ -80,7 +80,34 @@ def keysight_hsa_csv(file):
     channels = [[int(x) for x in name if x.isdigit()][0] for name in header_names]
     dataset_names = ['f'] + [f'ch{channel}' for channel in channels]
 
-    return(data, dataset_names)
+    return( data, dataset_names )
+
+def tektronix_oscilloscope_csv(file):
+    # Tested on data from a Tektronix TBS 2000B series oscilloscope
+    
+    # Get header by reading through file for first numeric entry
+    f = open(file, 'r')
+    header_size = 0
+    for line in f:
+        line = line.strip().split(',')
+        
+        # Check if first element of line is float. If not, continue parsing
+        try:
+            float(line[0])
+            break
+        except ValueError:
+            header_size += 1
+            continue
+
+    df = pd.read_csv(file, sep=',',
+                     skiprows = (header_size-1) if (header_size > 0) else None)
+
+    data, dataset_names = df.T.to_numpy(), np.char.lower( df.columns.to_numpy().astype(str) )
+    for i in range(len(dataset_names)):
+        if dataset_names[i] == 'time':
+            dataset_names[i] = 't'
+    
+    return( data, dataset_names )
 
 # INCOMPLETE
 def labview_log(dataset_name, path='.'):
