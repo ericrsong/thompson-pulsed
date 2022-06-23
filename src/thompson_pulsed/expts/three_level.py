@@ -571,6 +571,6 @@ class Data:
 
     def avg_spcm_traces(self):
         if self.spcm_runs is None:
-            raise Expection('spcm_runs was not set!')
+            raise Exception('spcm_runs was not set!')
 
-        return( spcm_runs.average_over(dim=1).average_over(dim=0) )
+        return( self.spcm_runs.average_over(dim=1).average_over(dim=0) )
