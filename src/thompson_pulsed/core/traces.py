@@ -567,6 +567,28 @@ class Frequency_Multitrace:
         self.F = f[-1]-f[0] + self.df
         self.dim = len(self.V.shape)
 
+    def mag2(self):
+        V = np.abs(self.V)**2
+        return( Time_Multitrace(self.f, np.abs(self.V)**2) )
+
+    def ifft(self):
+        """
+        Returns a Time Multitrace corresponding to the given frequency
+        multitrace.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Frequency_Multitrace
+        """
+        n_pts = round( self.F / self.df )
+        t = np.arange(0, n_pts) / self.F
+        Vt = np.fft.ifft(np.fft.ifftshift(self.V, axes=-1))
+
+        return( Time_Multitrace(t, Vt) )
+
 class Frequency_Sequence:
     def __init__(self, f, **kwargs):
         self.f = f
