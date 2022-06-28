@@ -110,7 +110,54 @@ class Sequence:
         
         return(triggers)
 
-class Time_Multitrace:
+class MT:
+    """
+    Generic multitrace object with a 1D x array and nD y array, where the LAST
+    index corresponds to x.
+    """
+    def __init__(self, X, Y):
+        """
+        Initialized a MT object.
+
+        Parameters
+        ----------
+        X : List of form [str, 1D np array]
+        Y : List of form [str, nD np array]. Array looks like [..., x] with
+            data points of arbitrary (d>=1) dimension. axis -1 corresponds to x.
+
+        Returns
+        -------
+        None.
+        """
+        x_str, x = X
+        y_str, y = Y
+
+        # Check shape agreement and assign to object
+        min_x_shape = min( x.shape[0], y.shape[-1] )
+
+        # Assign data to custom attributes
+        vars(self)[x_str] = x[:min_x_shape]
+        vars(self)[y_str] = y[..., :min_x_shape]
+
+        # Keep track of attribute names
+        self.x_attr = x_str
+        self.y_attr = y_str
+
+    def chop(self, tol=10):
+        """
+        If there are small real or imaginary components of self.y, chop them
+        off. For instance, 0.25 + 1e-14 * 1j gets transformed to 0.25.
+        """
+        y = vars(self)[self.y_attr]
+        if np.max(np.imag(y)) < 10**-tol:
+            y_new = np.round(np.real(y), 10)
+        else:
+            y_new = np.round(np.real(y), 10) + 1j * np.round(np.imag(y), 10)
+        vars(self)[self.y_attr] = y_new
+        return( self )
+        
+
+class Time_Multitrace(MT):
     """
     Stores information for multiple time traces. These multiple traces are
     assumed to be packed in a single numpy array of arbitrary dimension, where
@@ -134,12 +181,12 @@ class Time_Multitrace:
         -------
         None.
         """
+        super().__init__( ['t',t], ['V',V] )
+
         # Check shape agreement and assign to object
         min_time_shape = min( t.shape[0], V.shape[-1] )
         if dV is not None:
             assert V.shape == dV.shape
-        self.t = t[:min_time_shape]
-        self.V = V[..., :min_time_shape]
         self.dV = dV[..., :min_time_shape] if (dV is not None) else None
 
     """
@@ -552,15 +599,15 @@ class MT_Phase(Time_Multitrace):
             freqs = (xybar - xbar*ybar)/(x2bar - xbar**2) * 1/dx * 1/(2*np.pi)
             return(freqs)
 
-class Frequency_Multitrace:
+class Frequency_Multitrace(MT):
     """
     Stores information for multiple frequency traces. These multiple traces are
     assumed to be packed in a single numpy array of arbitrary dimension, where
     the LAST index corresponds to frequency.
     """
     def __init__(self, f, V):
-        self.f = f
-        self.V = V
+        # Generate MT with attributes f, V
+        super().__init__( ['f',f], ['V',V] )
         
         # Extract frequency parameters
         self.df = f[1]-f[0]
