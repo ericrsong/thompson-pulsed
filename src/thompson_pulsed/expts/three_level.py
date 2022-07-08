@@ -411,7 +411,7 @@ class Data:
                 i0_pulse = np.round( (imin+imax)/2 ).astype(int)
                 i0 = i0_pulse + int(n_bin_pts/2) # Contain most of jump within a single bin
                 
-                cav_phasor = traces.MT_Phasor(cav_phasor.t[i0:], cav_phasor.V[...,i0:])
+                cav_phasor = cav_phasor.truncate(t_min = cav_phasor.t[i0])
             elif align and use_cref:
                 # In average magnitude array, find peak and trough of a pulse
                 mag = np.average(cav_phasor.mag().V, axis=0)
@@ -422,7 +422,7 @@ class Data:
                 i0_pulse = int((i_pulse_max + i_pulse_min)/2) % n_pulse_pts
                 i0 = i0_pulse + int(n_bin_pts/2)
                 
-                cav_phasor = traces.MT_Phasor(cav_phasor.t[i0:], cav_phasor.V[...,i0:])
+                cav_phasor = cav_phasor.truncate(t_min = cav_phasor.t[i0])
             
             # Bin cavity phasor traces
             cav_phase = cav_phasor.phase()
@@ -445,6 +445,7 @@ class Data:
                 pulse_slice = slice(n_pulse_bins-1, None, n_pulse_bins)
                 cav_freq_vals = np.delete(cav_freq_vals, pulse_slice, axis=-1)
                 bin_times = np.delete(bin_times, pulse_slice, axis=-1)
+
         else:
             # Calculate frequency in bins of each pulse, since phase jumps seem to occur during pulses
             # DELETED CODE [see v0.5.0]: options for runs_aligned = False, single_index_align = True            
@@ -486,7 +487,9 @@ class Data:
             n_bins = int(n_pulses/n_bin_pulses)
             cav_freq_vals_bins = cav_freq_vals_flat[:,:n_bins*n_bin_pulses] \
                 .reshape((n_runs, n_bins, n_bin_pulses)) \
-                .mean(axis=-1)            
+                .mean(axis=-1)
+
+            # Shape array of frequency values back to (seq, run, t_bin)          
             cav_freq_vals = cav_freq_vals_bins \
                 .reshape(phase.shape[:-1] + (n_bins,))
             bin_times = cav_phase.t[0] + self.params.t_bin * (0.5 + np.arange(n_bins))
@@ -496,7 +499,7 @@ class Data:
             if avg_shots:
                 # Average (seq, run, t) to (seq, t)
                 cav_freq_vals = np.average(cav_freq_vals, axis=1)
-        
+
         # Subtract bare cavity frequency
         if self.fb is not None:
             cfv_ndim = cav_freq_vals.ndim
