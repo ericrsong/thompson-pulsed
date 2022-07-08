@@ -605,14 +605,29 @@ class Frequency_Multitrace(MT):
     assumed to be packed in a single numpy array of arbitrary dimension, where
     the LAST index corresponds to frequency.
     """
-    def __init__(self, f, V):
+    def __init__(self, f, V, dV=None):
         # Generate MT with attributes f, V
         super().__init__( ['f',f], ['V',V] )
         
-        # Extract frequency parameters
-        self.df = f[1]-f[0]
-        self.F = f[-1]-f[0] + self.df
-        self.dim = len(self.V.shape)
+        if dV is not None:
+            assert V.shape == dV.shape
+        self.dV = dV if (dV is not None) else None
+
+    @property
+    def f0(self):
+        return self.f[0]
+
+    @property
+    def df(self):
+        return self.f[1]-self.f[0]
+
+    @property
+    def F(self):
+        return self.f[-1]-self.f[0] + self.df
+
+    @property
+    def dim(self):
+        return len(self.V.shape)
 
     def mag2(self):
         V = np.abs(self.V)**2
