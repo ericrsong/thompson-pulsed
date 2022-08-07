@@ -207,7 +207,45 @@ class Time_Multitrace(MT):
     @property
     def dim(self):
         return len(self.V.shape)
+
+    ###
+    # GENERICALLY USEFUL FUNCTIONS
     
+    def set(self, V, dV = None):
+        """
+        Apply a new V (and dV) to a multitrace object, keeping the time values
+        untouched.
+
+        Parameters
+        ----------
+        V : ndarray
+            New V array for trace
+        dV : ndarray, optional
+            New dV array for trace
+
+        Returns
+        -------
+        self
+        """
+
+        if (type(V) != type(self.V)):
+            raise( TypeError(f"V must have type {type(self.V)} to write to this object. It currently has type {type(V)}.") )
+        if (V.shape != self.V.shape):
+            raise( TypeError(f"V must have shape {self.V.shape} to write to this object. It currently has shape {V.shape}.") )
+
+        self.V = V
+        if hasattr(self, 'dV'):
+            if (type(dV) != type(None)) and (type(dV) != type(self.V)):
+                raise( TypeError(f"dV must have type {type(None)} or type {type(self.V)} to write to this object. It currently has type {type(dV)}.") )
+            if (dV is not None) and (dV.shape != self.V.shape):
+                raise( TypeError(f"dV must have shape {self.V.shape} to write to this object. It currently has shape {dV.shape}.") )
+            self.dV = dV
+        return( self )
+
+
+    ###
+    # FUNCTIONS WITH SPECIFIC USES
+
     def average_over(self, axis):
         """
         Given a time multitrace and a specific axis, perform a (potentially 
