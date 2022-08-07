@@ -18,12 +18,16 @@ def ni_pci5105(file):
 
     Parameters
     ----------
-    file : string corresponding to a valid file address
+    file : str
+        Path to a valid file
 
     Returns
     -------
-    data : 2D numpy array of format np.array([t_array, ch0_array, ...])
-    data_names : 1D list of the titles of all 1D arrays stored in data
+    data : ndarray
+        2D array with format np.array([t_array, x1_array, ...])
+    dataset_names : list
+        1D list of the titles of all 1D arrays stored in data
+
     """
     df = pd.read_csv(file).T
     data = df.to_numpy()
@@ -37,12 +41,16 @@ def ni_pcie7851r_ai(file):
 
     Parameters
     ----------
-    file : string corresponding to a valid file address
+    file : str
+        Path to a valid file
 
     Returns
     -------
-    data : 2D numpy array of format np.array([t_array, x1_array, ...])
-    data_names : 1D list of the titles of all 1D arrays stored in data
+    data : ndarray
+        2D array with format np.array([t_array, x1_array, ...])
+    dataset_names : list
+        1D list of the titles of all 1D arrays stored in data
+
     """
     df = pd.read_csv(file, sep='\t', header=None)
     
@@ -58,6 +66,22 @@ def ni_pcie7851r_ai(file):
     return( data, dataset_names )
 
 def keysight_hsa_csv(file):
+    """Uses default python functions to load data from a CSV file, as
+    generated using the Keysight Handheld Spectrum Analyzer.
+
+    Parameters
+    ----------
+    file : str
+        Path to a valid file
+
+    Returns
+    -------
+    data : ndarray
+        2D array with format np.array([t_array, x1_array, ...])
+    dataset_names : list
+        1D list of the titles of all 1D arrays stored in data
+
+    """
     data, in_header, i = [], True, 0
     with open(file,'r') as f:
         for line in f:
@@ -83,7 +107,22 @@ def keysight_hsa_csv(file):
     return( data, dataset_names )
 
 def tektronix_oscilloscope_csv(file):
-    # Tested on data from a Tektronix TBS 2000B series oscilloscope
+    """Uses pandas to load data from a CSV file, as generated from a
+    Tektronix oscilloscope. Tested on a TBS 2000B series scope.
+
+    Parameters
+    ----------
+    file : str
+        Path to a valid file
+
+    Returns
+    -------
+    data : ndarray
+        2D array with format np.array([t_array, x1_array, ...])
+    dataset_names : list
+        1D list of the titles of all 1D arrays stored in data
+
+    """
     
     # Get header by reading through file for first numeric entry
     f = open(file, 'r')
