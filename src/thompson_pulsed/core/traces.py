@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import keyword
 
 __all__ = ['Sequence', 'Time_Multitrace', 'MT_Phasor', 'MT_Phase', 
-           'Frequency_Multitrace', 'Frequency_Sequence']
+           'Frequency_Multitrace', 'Frequency_Sequence', 'SequenceLoadException']
 
 class Sequence:
     """
@@ -41,9 +41,9 @@ class Sequence:
     @classmethod
     def load(cls, file, parser):
         """
-        Generates a Sequence class by extracting data from a given file using
+        Generates a ``Sequence`` object by extracting data from a given file using
         the proper parser function. This is a class method so can be called
-        directly on the class Sequence.
+        directly on the class ``Sequence``.
 
         Parameters
         ----------
@@ -54,7 +54,7 @@ class Sequence:
 
         Returns
         -------
-        An instance of Sequence in the form Sequence(t, **data_dict_from_file)
+        An instance of ``Sequence`` in the form ``Sequence(t, **data_dict_from_file)``
         """
         data, dataset_names = parser(file)
         
@@ -96,7 +96,7 @@ class Sequence:
 
         Returns
         -------
-        triggers : 1D np array 
+        triggers : 1D ndarray
         """
         trig_level = np.max(self.trig.V) / 2
         trig_min_spacing = 1e-6 # 1 us minimum distance between triggers
