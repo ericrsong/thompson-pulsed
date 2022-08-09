@@ -1,6 +1,6 @@
 matplotlib==3.5.2
-numpy==1.23.1
-pandas==1.4.3
-scipy==1.9.0
+numpy<=1.21.4
+pandas
+scipy
 setuptools==61.2.0
 watchdog==2.1.9
