@@ -18,11 +18,11 @@ class Sequence:
     Stores information for a single sequence of an experiment. This is a generic
     class definition with variable-name attributes. 
     
-    A Sequence object is required to have a time array, with the name 't'. This
+    A Sequence object is required to have a time array, with the name ``t``. This
     array is detected and then used as the time record for all other arrays
     when packaged into Time Traces.
     
-    Optionally, a Sequence object may have a trigger array, with the name 'trig'.
+    Optionally, a Sequence object may have a trigger array, with the name ``trig``.
     This array is detected and then used to mark indices where a trigger is
     found.
     """
@@ -189,23 +189,37 @@ class Time_Multitrace(MT):
             assert V.shape == dV.shape
         self.dV = dV[..., :min_time_shape] if (dV is not None) else None
 
-    """
-    t0, dt, T, dim are getter functions that read out values from self.t, self.V
-    """
+
+    # t0, dt, T, dim are getter functions that read out values from self.t, self.V
     @property
     def t0(self):
+        """
+        Getter function that reads out initial time point. Call using ``MT.t0``.
+        """
         return self.t[0]
 
     @property
     def dt(self):
+        """
+        Getter function that reads out the spacing between time point. Call using 
+        ``MT.dt``.
+        """
         return self.t[1]-self.t[0]
 
     @property
     def T(self):
+        """
+        Getter function that reads out the duration of the trace. Call using
+        ``MT.T``.
+        """
         return self.t[-1]-self.t[0] + self.dt
 
     @property
     def dim(self):
+        """
+        Getter function that reads out the dimensions of ``MT.V``. Call using
+        ``MT.dim``.
+        """
         return len(self.V.shape)
 
     ###
@@ -259,7 +273,7 @@ class Time_Multitrace(MT):
 
         Returns
         -------
-        Class of type self (base class: Time_Multitrace)
+        Class of type self (base class Time_Multitrace)
         """
         if self.dV is None:
             # No existing statistics. Generate unweighted average and uncertainty
@@ -293,7 +307,7 @@ class Time_Multitrace(MT):
 
         Returns
         -------
-        Class of type self (base class: Time_Multitrace)
+        Class of type self (base class Time_Multitrace)
         """
         # Parameter checks
         if t0 is None or t0 < self.t[0]:
@@ -367,7 +381,7 @@ class Time_Multitrace(MT):
 
         Returns
         -------
-        Class of type self (base class: Time_Multitrace)
+        Class of type self (base class Time_Multitrace)
         """
         new_shape = (np.prod(self.V.shape[:-1]), self.V.shape[-1])
         V_new = np.reshape(self.V, new_shape)
@@ -536,6 +550,12 @@ class Time_Multitrace(MT):
         
         
 class MT_Phasor(Time_Multitrace):
+    """
+    A multitrace object built off of ``Time_Multitrace`` which represents
+    a time series of complex phasors, carrying with it phasor-specific
+    class methods.
+    """
+    
     def phase(self, unwrap=True):
         """
         Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
@@ -553,19 +573,61 @@ class MT_Phasor(Time_Multitrace):
         return( MT_Phase(self.t, np.angle(self.V), unwrap=unwrap) )
     
     def mag(self):
+        """Generates a Time_Multitrace of the phasor magnitudes.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Time_Multitrace, with same shape as self
+        """
         return( Time_Multitrace(self.t, np.abs(self.V), dV=self.dV) )
 
     def mag2(self):
+        """Generates a Time_Multitrace of the phasor magnitudes squared.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Time_Multitrace, with same shape as self
+        """
         return( Time_Multitrace(self.t, np.abs(self.V)**2, 
             dV = (2*np.abs(self.V) * self.dV) if (self.dV is not None) else None ) )
     
     def real(self):
+        """Generates a Time_Multitrace of the real components of the phasors.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Time_Multitrace, with same shape as self
+        """
         return( Time_Multitrace(self.t, np.real(self.V), dV=self.dV) )
     
     def imag(self):
+        """Generates a Time_Multitrace of the imaginary components of the phasors.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Time_Multitrace, with same shape as self
+        """
         return( Time_Multitrace(self.t, np.imag(self.V), dV=self.dV) )
 
 class MT_Phase(Time_Multitrace):
+    """
+    A multitrace object built off of ``Time_Multitrace`` which represents
+    a time series of phase values, carrying with it phase-specific
+    class methods.
+    """
+
     def __init__(self, t, V, dV=None, unwrap=True):
         super().__init__(t,V,dV)
         
@@ -607,8 +669,9 @@ class MT_Phase(Time_Multitrace):
 
         Returns
         -------
-        freqs : np array of floats, shape = self.V.shape[:-1]
-            Estimated frequencies of Phase traces, expressed in Hz (cycles/sec)
+        freqs : ndarray of floats
+            Estimated frequencies of Phase traces, expressed in Hz (cycles/sec).
+            Shape = self.V.shape[:-1]
         """
         if t_bin is not None:
             return( self.bin_trace(t_bin, t0=t0).frequency(t_bin=None, wfunc=wfunc) )
@@ -681,7 +744,7 @@ class Frequency_Multitrace(MT):
 
         Returns
         -------
-        Frequency_Multitrace
+        Time_Multitrace
         """
         n_pts = round( self.F / self.df )
         t = np.arange(0, n_pts) / self.F

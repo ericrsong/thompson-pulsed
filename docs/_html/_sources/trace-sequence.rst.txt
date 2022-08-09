@@ -1,0 +1,5 @@
+``Multitrace`` and ``Sequence`` objects
+=======================================
+
+.. automodule:: thompson_pulsed.core.traces
+   :members:

@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Multitrace and Sequence objects &mdash; Thompson Pulsed Analysis Package  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Multitrace and Sequence objects" href="traces.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Thompson Pulsed Analysis Package
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parsers.html">File parsing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="traces.html"><code class="docutils literal notranslate"><span class="pre">Multitrace</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">Multitrace</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Thompson Pulsed Analysis Package</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="api.html">API</a> &raquo;</li>
+        
+          <li><a href="traces.html"><code class="docutils literal notranslate"><span class="pre">Multitrace</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects</a> &raquo;</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">Multitrace</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/trace-sequence.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-thompson_pulsed.core.traces">
+<span id="multitrace-and-sequence-objects"></span><h1><code class="docutils literal notranslate"><span class="pre">Multitrace</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects<a class="headerlink" href="#module-thompson_pulsed.core.traces" title="Permalink to this heading">¶</a></h1>
+<p>Created on Fri Jan 14 18:45:40 2022</p>
+<p>&#64;author: dylan</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Frequency_Multitrace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">thompson_pulsed.core.traces.</span></span><span class="sig-name descname"><span class="pre">Frequency_Multitrace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Frequency_Multitrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores information for multiple frequency traces. These multiple traces are
+assumed to be packed in a single numpy array of arbitrary dimension, where
+the LAST index corresponds to frequency.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Frequency_Multitrace.ifft">
+<span class="sig-name descname"><span class="pre">ifft</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Frequency_Multitrace.ifft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Time Multitrace corresponding to the given frequency
+multitrace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">thompson_pulsed.core.traces.</span></span><span class="sig-name descname"><span class="pre">MT_Phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unwrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>A multitrace object built off of <code class="docutils literal notranslate"><span class="pre">Time_Multitrace</span></code> which represents
+a time series of phase values, carrying with it phase-specific
+class methods.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phase.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_bin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phase.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a linear regression slope in O(n) time, using a closed-form
+formula for least-squares that assumes evenly sampled points in time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_bin</strong> (<em>float</em><em>, </em><em>optional</em>) – Describes what size window to bin over. If None, assumes a single
+bin for the whole time trace. Default is None.</p></li>
+<li><p><strong>t0</strong> (<em>float</em><em>, </em><em>optional</em>) – Describes a start time to bin</p></li>
+<li><p><strong>wfunc</strong> (<em>scalar function</em><em> (</em><em>np array compatible</em><em>)</em><em>, </em><em>optional</em>) – Describes a weight map to apply to frequency measurement. Domain of
+wfunc assumed to vary from 0 to 1. Example: wfunc = lambda x:
+np.sin(np.pi*x)**2. If None, assumes a constant weight function.
+Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>freqs</strong> – Estimated frequencies of Phase traces, expressed in Hz (cycles/sec).
+Shape = self.V.shape[:-1]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">thompson_pulsed.core.traces.</span></span><span class="sig-name descname"><span class="pre">MT_Phasor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A multitrace object built off of <code class="docutils literal notranslate"><span class="pre">Time_Multitrace</span></code> which represents
+a time series of complex phasors, carrying with it phasor-specific
+class methods.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor.imag">
+<span class="sig-name descname"><span class="pre">imag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.imag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Time_Multitrace of the imaginary components of the phasors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor.mag">
+<span class="sig-name descname"><span class="pre">mag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.mag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Time_Multitrace of the phasor magnitudes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor.mag2">
+<span class="sig-name descname"><span class="pre">mag2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.mag2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Time_Multitrace of the phasor magnitudes squared.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor.phase">
+<span class="sig-name descname"><span class="pre">phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unwrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
+phases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>unwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Describes whether or not to unwrap the phases.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phase" title="thompson_pulsed.core.traces.MT_Phase">MT_Phase</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>) with same shape as self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.MT_Phasor.real">
+<span class="sig-name descname"><span class="pre">real</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.real" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Time_Multitrace of the real components of the phasors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Sequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">thompson_pulsed.core.traces.</span></span><span class="sig-name descname"><span class="pre">Sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores information for a single sequence of an experiment. This is a generic
+class definition with variable-name attributes.</p>
+<p>A Sequence object is required to have a time array, with the name <code class="docutils literal notranslate"><span class="pre">t</span></code>. This
+array is detected and then used as the time record for all other arrays
+when packaged into Time Traces.</p>
+<p>Optionally, a Sequence object may have a trigger array, with the name <code class="docutils literal notranslate"><span class="pre">trig</span></code>.
+This array is detected and then used to mark indices where a trigger is
+found.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Sequence.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Sequence.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Sequence class by extracting data from a given file using
+the proper parser function. This is a class method so can be called
+directly on the class Sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>str</em>) – Path to the file in question.</p></li>
+<li><p><strong>parser</strong> (<em>function</em>) – Parser used to extract relevant data from file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>An instance of Sequence in the form Sequence(t, **data_dict_from_file)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">thompson_pulsed.core.traces.</span></span><span class="sig-name descname"><span class="pre">Time_Multitrace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores information for multiple time traces. These multiple traces are
+assumed to be packed in a single numpy array of arbitrary dimension, where
+the LAST index corresponds to time.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.average_over">
+<span class="sig-name descname"><span class="pre">average_over</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.average_over" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a time multitrace and a specific axis, perform a (potentially
+weighted) average over that dimension and return a multitrace with one
+fewer dimension and statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>axis</strong> (<em>int</em>) – Axis to average over.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.bin_trace">
+<span class="sig-name descname"><span class="pre">bin_trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_bin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.bin_trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a time multitrace and a time t_bin, bins the multiple time traces
+into subtraces with length t_bin in time. Given a k+1 dimensional
+multitrace of the form [d1, …, dk, t], returns a k+2 dimensional
+multitrace of the form [d1, …, dk, bin, t].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_bin</strong> (<em>float</em>) – Binning time in units of self.t</p></li>
+<li><p><strong>t0</strong> (<em>float</em><em>, </em><em>optional</em>) – Specifies what time to start binning. If None, sets t0 = self.t[0].
+Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.binned_average">
+<span class="sig-name descname"><span class="pre">binned_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_bin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.binned_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assuming an evenly-spaced array, time-bins an array and then averages
+points within that bin, returning a Time_Multitrace across the full
+time series with fewer, averaged points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_bin</strong> (<em>float</em>) – Time window for binning and averaging. Units the same as self.t</p></li>
+<li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
+If True, attempts to define w = 1/dV**2 and otherwise uses equal
+weighting. If False, uses equal weighting. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a binned average of self.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.collapse">
+<span class="sig-name descname"><span class="pre">collapse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.collapse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a MT with the same data as self, but with all non-time
+dimensions collapsed into a single dimension. Reshaping is done with
+np.reshape(), which maintains dictionary order in the indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Class of type self (base class Time_Multitrace)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.fft">
+<span class="sig-name descname"><span class="pre">fft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Frequency Multitrace corresponding to the given time
+multitrace. Optionally, allows zero padding up to t_pad, which allows
+one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
+Fourier broadening of the spectrum is still limited by the time length
+of the original array, as expected of time-frequency uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>t_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Pad time in units of self.t. If None, no padding is performed.
+Default is None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Frequency_Multitrace" title="thompson_pulsed.core.traces.Frequency_Multitrace">Frequency_Multitrace</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.iq_demod">
+<span class="sig-name descname"><span class="pre">iq_demod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_demod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.iq_demod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs an IQ demodulation on the multitrace with frequency f_demod.
+The scipy function filtfilt applies the given filter in the forward-
+time direction once, then applies it again in the backwards-time
+direction. This ensures the next applied filter has no net phase delay
+at the expense of preserving causality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f_demod</strong> (<em>float</em>) – frequency to demodulate signal by. Units are period units in t</p></li>
+<li><p><strong>filt</strong> (<em>string</em><em>, </em><em>optional</em>) – Describes which scipy filter to use. The default is ‘butter’.</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Describes which order filter to use. The default is 4.</p></li>
+<li><p><strong>f_cutoff</strong> (<em>float</em><em>, </em><em>optional</em>) – Describes the cutoff frequency of the filter. If None, function
+assumes f_cutoff to be f_demod. The default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phasor" title="thompson_pulsed.core.traces.MT_Phasor">MT_Phasor</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>), representing demodulated phasors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.moving_average">
+<span class="sig-name descname"><span class="pre">moving_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_avg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.moving_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assuming an evenly-spaced array, performs a moving average with window
+t_avg.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_avg</strong> (<em>float</em>) – Time window for moving average. Units the same as self.t</p></li>
+<li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
+If True, attempts to define w = 1/dV**2 and otherwise uses equal
+weighting. If False, uses equal weighting. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a moving average of self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a new V (and dV) to a multitrace object, keeping the time values
+untouched.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>ndarray</em>) – New V array for trace</p></li>
+<li><p><strong>dV</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – New dV array for trace</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.truncate">
+<span class="sig-name descname"><span class="pre">truncate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.truncate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Truncates the Time_Multitrace arrays to include only times t such that
+t_min &lt;= t &lt;= t_max.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower bound for truncation. If t_min is None, set t_min to t[0].
+Default is None.</p></li>
+<li><p><strong>t_max</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper bound for truncation. If t_max is None, set t_max to t[-1].
+Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a time-truncated version of self.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.T">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter function that reads out the duration of the trace. Call using
+<code class="docutils literal notranslate"><span class="pre">MT.T</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.dim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter function that reads out the dimensions of <code class="docutils literal notranslate"><span class="pre">MT.V</span></code>. Call using
+<code class="docutils literal notranslate"><span class="pre">MT.dim</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.dt">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dt</span></span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter function that reads out the spacing between time point. Call using
+<code class="docutils literal notranslate"><span class="pre">MT.dt</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="thompson_pulsed.core.traces.Time_Multitrace.t0">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">t0</span></span><a class="headerlink" href="#thompson_pulsed.core.traces.Time_Multitrace.t0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter function that reads out initial time point. Call using <code class="docutils literal notranslate"><span class="pre">MT.t0</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="traces.html" class="btn btn-neutral float-left" title="Multitrace and Sequence objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Dylan J. Young
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

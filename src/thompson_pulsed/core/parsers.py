@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 25 17:49:15 2022
+These functions are designed to quickly pull information out of file generated
+from common lab instruments and into a uniform datatype, specifically a 2d
+numpy array alongside a list of dataset names.
 
-@author: dylan
+For ease of use, the module was designed to allow for calling these functions
+simply by typing, for instance, ``thompson_pulsed.ni_pci5105(file)``.
 """
 import numpy as np
 import pandas as pd
