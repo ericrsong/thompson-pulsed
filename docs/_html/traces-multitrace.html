@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -180,10 +180,10 @@ the LAST index corresponds to time.</p>
 weighted) average over that dimension and return a multitrace with one
 fewer dimension and statistics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>axis</strong> (<em>int</em>) – Axis to average over.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -197,14 +197,14 @@ into subtraces with length t_bin in time. Given a k+1 dimensional
 multitrace of the form [d1, …, dk, t], returns a k+2 dimensional
 multitrace of the form [d1, …, dk, bin, t].</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Binning time in units of self.t</p></li>
 <li><p><strong>t0</strong> (<em>float</em><em>, </em><em>optional</em>) – Specifies what time to start binning. If None, sets t0 = self.t[0].
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -217,7 +217,7 @@ Default is None.</p></li>
 points within that bin, returning a Time_Multitrace across the full
 time series with fewer, averaged points.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Time window for binning and averaging. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -225,7 +225,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a binned average of self.</p>
 </dd>
 </dl>
@@ -245,7 +245,7 @@ off. For instance, 0.25 + 1e-14 * 1j gets transformed to 0.25.</p>
 dimensions collapsed into a single dimension. Reshaping is done with
 np.reshape(), which maintains dictionary order in the indices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -260,11 +260,11 @@ one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
 Fourier broadening of the spectrum is still limited by the time length
 of the original array, as expected of time-frequency uncertainty.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>t_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Pad time in units of self.t. If None, no padding is performed.
 Default is None.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Frequency_Multitrace</p>
 </dd>
 </dl>
@@ -279,7 +279,7 @@ time direction once, then applies it again in the backwards-time
 direction. This ensures the next applied filter has no net phase delay
 at the expense of preserving causality.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>f_demod</strong> (<em>float</em>) – frequency to demodulate signal by. Units are period units in t</p></li>
 <li><p><strong>filt</strong> (<em>string</em><em>, </em><em>optional</em>) – Describes which scipy filter to use. The default is ‘butter’.</p></li>
@@ -288,7 +288,7 @@ at the expense of preserving causality.</p>
 assumes f_cutoff to be f_demod. The default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phasor" title="thompson_pulsed.core.traces.MT_Phasor">MT_Phasor</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>), representing demodulated phasors</p>
 </dd>
 </dl>
@@ -300,7 +300,7 @@ assumes f_cutoff to be f_demod. The default is None.</p></li>
 <dd><p>Assuming an evenly-spaced array, performs a moving average with window
 t_avg.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_avg</strong> (<em>float</em>) – Time window for moving average. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -308,7 +308,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a moving average of self</p>
 </dd>
 </dl>
@@ -320,13 +320,13 @@ weighting. If False, uses equal weighting. Default is True.</p></li>
 <dd><p>Apply a new V (and dV) to a multitrace object, keeping the time values
 untouched.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>V</strong> (<em>ndarray</em>) – New V array for trace</p></li>
 <li><p><strong>dV</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – New dV array for trace</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>self</p>
 </dd>
 </dl>
@@ -338,7 +338,7 @@ untouched.</p>
 <dd><p>Truncates the Time_Multitrace arrays to include only times t such that
 t_min &lt;= t &lt;= t_max.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower bound for truncation. If t_min is None, set t_min to t[0].
 Default is None.</p></li>
@@ -346,7 +346,7 @@ Default is None.</p></li>
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a time-truncated version of self.</p>
 </dd>
 </dl>
@@ -394,10 +394,10 @@ class methods.</p>
 weighted) average over that dimension and return a multitrace with one
 fewer dimension and statistics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>axis</strong> (<em>int</em>) – Axis to average over.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -411,14 +411,14 @@ into subtraces with length t_bin in time. Given a k+1 dimensional
 multitrace of the form [d1, …, dk, t], returns a k+2 dimensional
 multitrace of the form [d1, …, dk, bin, t].</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Binning time in units of self.t</p></li>
 <li><p><strong>t0</strong> (<em>float</em><em>, </em><em>optional</em>) – Specifies what time to start binning. If None, sets t0 = self.t[0].
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -431,7 +431,7 @@ Default is None.</p></li>
 points within that bin, returning a Time_Multitrace across the full
 time series with fewer, averaged points.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Time window for binning and averaging. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -439,7 +439,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a binned average of self.</p>
 </dd>
 </dl>
@@ -459,7 +459,7 @@ off. For instance, 0.25 + 1e-14 * 1j gets transformed to 0.25.</p>
 dimensions collapsed into a single dimension. Reshaping is done with
 np.reshape(), which maintains dictionary order in the indices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -474,11 +474,11 @@ one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
 Fourier broadening of the spectrum is still limited by the time length
 of the original array, as expected of time-frequency uncertainty.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>t_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Pad time in units of self.t. If None, no padding is performed.
 Default is None.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Frequency_Multitrace</p>
 </dd>
 </dl>
@@ -489,7 +489,7 @@ Default is None.</p>
 <span class="sig-name descname"><span class="pre">imag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.imag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Time_Multitrace of the imaginary components of the phasors.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
 </dd>
 </dl>
@@ -504,7 +504,7 @@ time direction once, then applies it again in the backwards-time
 direction. This ensures the next applied filter has no net phase delay
 at the expense of preserving causality.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>f_demod</strong> (<em>float</em>) – frequency to demodulate signal by. Units are period units in t</p></li>
 <li><p><strong>filt</strong> (<em>string</em><em>, </em><em>optional</em>) – Describes which scipy filter to use. The default is ‘butter’.</p></li>
@@ -513,7 +513,7 @@ at the expense of preserving causality.</p>
 assumes f_cutoff to be f_demod. The default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phasor" title="thompson_pulsed.core.traces.MT_Phasor">MT_Phasor</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>), representing demodulated phasors</p>
 </dd>
 </dl>
@@ -524,7 +524,7 @@ assumes f_cutoff to be f_demod. The default is None.</p></li>
 <span class="sig-name descname"><span class="pre">mag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.mag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Time_Multitrace of the phasor magnitudes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
 </dd>
 </dl>
@@ -535,7 +535,7 @@ assumes f_cutoff to be f_demod. The default is None.</p></li>
 <span class="sig-name descname"><span class="pre">mag2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.mag2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Time_Multitrace of the phasor magnitudes squared.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
 </dd>
 </dl>
@@ -547,7 +547,7 @@ assumes f_cutoff to be f_demod. The default is None.</p></li>
 <dd><p>Assuming an evenly-spaced array, performs a moving average with window
 t_avg.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_avg</strong> (<em>float</em>) – Time window for moving average. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -555,7 +555,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a moving average of self</p>
 </dd>
 </dl>
@@ -567,10 +567,10 @@ weighting. If False, uses equal weighting. Default is True.</p></li>
 <dd><p>Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
 phases.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>unwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Describes whether or not to unwrap the phases.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phase" title="thompson_pulsed.core.traces.MT_Phase">MT_Phase</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>) with same shape as self</p>
 </dd>
 </dl>
@@ -581,7 +581,7 @@ phases.</p>
 <span class="sig-name descname"><span class="pre">real</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#thompson_pulsed.core.traces.MT_Phasor.real" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Time_Multitrace of the real components of the phasors.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, with same shape as self</p>
 </dd>
 </dl>
@@ -593,13 +593,13 @@ phases.</p>
 <dd><p>Apply a new V (and dV) to a multitrace object, keeping the time values
 untouched.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>V</strong> (<em>ndarray</em>) – New V array for trace</p></li>
 <li><p><strong>dV</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – New dV array for trace</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>self</p>
 </dd>
 </dl>
@@ -611,7 +611,7 @@ untouched.</p>
 <dd><p>Truncates the Time_Multitrace arrays to include only times t such that
 t_min &lt;= t &lt;= t_max.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower bound for truncation. If t_min is None, set t_min to t[0].
 Default is None.</p></li>
@@ -619,7 +619,7 @@ Default is None.</p></li>
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a time-truncated version of self.</p>
 </dd>
 </dl>
@@ -667,10 +667,10 @@ class methods.</p>
 weighted) average over that dimension and return a multitrace with one
 fewer dimension and statistics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>axis</strong> (<em>int</em>) – Axis to average over.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -684,14 +684,14 @@ into subtraces with length t_bin in time. Given a k+1 dimensional
 multitrace of the form [d1, …, dk, t], returns a k+2 dimensional
 multitrace of the form [d1, …, dk, bin, t].</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Binning time in units of self.t</p></li>
 <li><p><strong>t0</strong> (<em>float</em><em>, </em><em>optional</em>) – Specifies what time to start binning. If None, sets t0 = self.t[0].
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -704,7 +704,7 @@ Default is None.</p></li>
 points within that bin, returning a Time_Multitrace across the full
 time series with fewer, averaged points.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em>) – Time window for binning and averaging. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -712,7 +712,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a binned average of self.</p>
 </dd>
 </dl>
@@ -732,7 +732,7 @@ off. For instance, 0.25 + 1e-14 * 1j gets transformed to 0.25.</p>
 dimensions collapsed into a single dimension. Reshaping is done with
 np.reshape(), which maintains dictionary order in the indices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Class of type self (base class Time_Multitrace)</p>
 </dd>
 </dl>
@@ -747,11 +747,11 @@ one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
 Fourier broadening of the spectrum is still limited by the time length
 of the original array, as expected of time-frequency uncertainty.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>t_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Pad time in units of self.t. If None, no padding is performed.
 Default is None.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Frequency_Multitrace</p>
 </dd>
 </dl>
@@ -763,7 +763,7 @@ Default is None.</p>
 <dd><p>Calculates a linear regression slope in O(n) time, using a closed-form
 formula for least-squares that assumes evenly sampled points in time.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_bin</strong> (<em>float</em><em>, </em><em>optional</em>) – Describes what size window to bin over. If None, assumes a single
 bin for the whole time trace. Default is None.</p></li>
@@ -774,11 +774,11 @@ np.sin(np.pi*x)**2. If None, assumes a constant weight function.
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>freqs</strong> – Estimated frequencies of Phase traces, expressed in Hz (cycles/sec).
 Shape = self.V.shape[:-1]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ndarray of floats</p>
 </dd>
 </dl>
@@ -793,7 +793,7 @@ time direction once, then applies it again in the backwards-time
 direction. This ensures the next applied filter has no net phase delay
 at the expense of preserving causality.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>f_demod</strong> (<em>float</em>) – frequency to demodulate signal by. Units are period units in t</p></li>
 <li><p><strong>filt</strong> (<em>string</em><em>, </em><em>optional</em>) – Describes which scipy filter to use. The default is ‘butter’.</p></li>
@@ -802,7 +802,7 @@ at the expense of preserving causality.</p>
 assumes f_cutoff to be f_demod. The default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.MT_Phasor" title="thompson_pulsed.core.traces.MT_Phasor">MT_Phasor</a>(<a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>), representing demodulated phasors</p>
 </dd>
 </dl>
@@ -814,7 +814,7 @@ assumes f_cutoff to be f_demod. The default is None.</p></li>
 <dd><p>Assuming an evenly-spaced array, performs a moving average with window
 t_avg.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_avg</strong> (<em>float</em>) – Time window for moving average. Units the same as self.t</p></li>
 <li><p><strong>use_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether or not to weight data points when averaging.
@@ -822,7 +822,7 @@ If True, attempts to define w = 1/dV**2 and otherwise uses equal
 weighting. If False, uses equal weighting. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a moving average of self</p>
 </dd>
 </dl>
@@ -834,13 +834,13 @@ weighting. If False, uses equal weighting. Default is True.</p></li>
 <dd><p>Apply a new V (and dV) to a multitrace object, keeping the time values
 untouched.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>V</strong> (<em>ndarray</em>) – New V array for trace</p></li>
 <li><p><strong>dV</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – New dV array for trace</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>self</p>
 </dd>
 </dl>
@@ -852,7 +852,7 @@ untouched.</p>
 <dd><p>Truncates the Time_Multitrace arrays to include only times t such that
 t_min &lt;= t &lt;= t_max.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower bound for truncation. If t_min is None, set t_min to t[0].
 Default is None.</p></li>
@@ -860,7 +860,7 @@ Default is None.</p></li>
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#thompson_pulsed.core.traces.Time_Multitrace" title="thompson_pulsed.core.traces.Time_Multitrace">Time_Multitrace</a>, representing a time-truncated version of self.</p>
 </dd>
 </dl>
