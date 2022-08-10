@@ -314,25 +314,25 @@ class Data:
         """
         idx_full = lambda dim: (idx,) + (slice(None),) * (dim-1)
 
-        new_atom_runs = self.atom_runs.set( self.atom_runs.V[idx_full(self.atom_runs.shape)] )
-        new_cav_runs = self.cav_runs.set( self.cav_runs.V[idx_full(self.cav_runs.shape)] )
+        new_atom_runs = self.atom_runs.V[idx_full(self.atom_runs.dim)]
+        new_cav_runs = self.cav_runs.V[idx_full(self.cav_runs.dim)]
 
         if self.cref_runs is not None:
-            new_cref_runs = self.cref_runs.set( self.cref_runs.V[idx_full(self.cref_runs.shape)] )
+            new_cref_runs = self.cref_runs.V[idx_full(self.cref_runs.dim)]
         else:
             new_cref_runs = None
 
         if self.fi is not None:
-            new_fi = self.fi[ idx_full(self.fi.shape) ]
+            new_fi = self.fi[ idx_full(self.fi.ndim) ]
         else:
             new_fi = None
 
         if self.fb is not None:
-            new_fb = self.fb[ idx_full(self.fb.shape) ]
+            new_fb = self.fb[ idx_full(self.fb.ndim) ]
         else:  
             new_fb = None
 
-        return( Data(self.t, new_atom_runs, new_cav_runs, params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
+        return( Data(self.t, new_atom_runs, new_cav_runs, self.params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
 
     
     def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
