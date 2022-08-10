@@ -332,7 +332,7 @@ class Data:
         else:  
             new_fb = None
 
-        return( Data(self.t, new_atom_runs, new_cav_runs, self.params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
+        return( Data(self.t, new_cav_runs, new_atom_runs, self.params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
 
     
     def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
