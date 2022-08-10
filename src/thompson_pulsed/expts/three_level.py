@@ -302,6 +302,38 @@ class Data:
     
         return(cav_seqs_mag)
 
+    def subset(self, idx):
+        """
+        Returns a Data object which is sliced along the sequence axis with
+        the given 1D numpy array idx.
+
+        Parameters
+        ----------
+        idx : ndarray
+            Selects which sequences to keep.
+        """
+        idx_full = lambda dim: (idx,) + (slice(None),) * (dim-1)
+
+        new_atom_runs = self.atom_runs.set( self.atom_runs.V[idx_full(self.atom_runs.shape)] )
+        new_cav_runs = self.cav_runs.set( self.cav_runs.V[idx_full(self.cav_runs.shape)] )
+
+        if self.cref_runs is not None:
+            new_cref_runs = self.cref_runs.set( self.cref_runs.V[idx_full(self.cref_runs.shape)] )
+        else:
+            new_cref_runs = None
+
+        if self.fi is not None:
+            new_fi = self.fi[ idx_full(self.fi.shape) ]
+        else:
+            new_fi = None
+
+        if self.fb is not None:
+            new_fb = self.fb[ idx_full(self.fb.shape) ]
+        else:  
+            new_fb = None
+
+        return( Data(self.t, new_atom_runs, new_cav_runs, params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
+
     
     def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
                                ignore_pulse_bins = True, use_cref = True, avg_shots = True):
