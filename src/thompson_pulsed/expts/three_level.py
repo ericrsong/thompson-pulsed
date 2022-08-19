@@ -194,19 +194,19 @@ class Experiment:
         # Process premeasure and postmeasure runs
         ####
 
-        # Load postmeasure into Experiment object
+        # Load postmeasure into Data object
         self.has_postmeasure = (postseq['cav'] is not None)
-        self.postmeasure = Data(t, postseq['cav'], postseq['atom'], self.params, cref_runs=postseq['cref']) \
+        data_postmeasure = Data(t, postseq['cav'], postseq['atom'], self.params, cref_runs=postseq['cref']) \
                             if self.has_postmeasure else None
 
         # Process postmeasure. fb.shape = (seq,)
         fb = None
         if self.has_postmeasure:
-            fb_seqs = self.postmeasure.track_cav_frequency_iq(avg_sequences=False)
+            fb_seqs = data_postmeasure.track_cav_frequency_iq(avg_sequences=False)
             fb_tbin, fb_seqs_vals = fb_seqs.t, fb_seqs.V
 
             # Get phasor magnitudes at t_bin values
-            fb_seqs_mag = self.postmeasure._seq_cav_probe_mag()
+            fb_seqs_mag = data_postmeasure._seq_cav_probe_mag()
             idx_tbin = np.round(
                     (fb_tbin - fb_seqs_mag.t0) / fb_seqs_mag.dt
                 ).astype(int)
@@ -215,19 +215,19 @@ class Experiment:
             # Calculate single fb for each sequence
             fb = np.average(fb_seqs_vals, axis=-1, weights=fb_seqs_mag2_vals)
 
-        # Load premeasure into Experiment object
+        # Load premeasure into Data object
         self.has_premeasure = (preseq['cav'] is not None)
-        self.premeasure = Data(t, preseq['cav'], preseq['atom'], self.params, fb=fb, cref_runs=preseq['cref']) \
+        data_premeasure = Data(t, preseq['cav'], preseq['atom'], self.params, fb=fb, cref_runs=preseq['cref']) \
                             if self.has_premeasure else None
         
         # Process premeasure. fi.shape = (seq,)
         fi = None
         if self.has_premeasure:
-            fi_seqs = self.premeasure.track_cav_frequency_iq(avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
+            fi_seqs = data_premeasure.track_cav_frequency_iq(avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
             fi_tbin, fi_seqs_vals = fi_seqs.t, fi_seqs.V
 
             # Get phasor magnitudes at t_bin values
-            fi_seqs_mag = self.premeasure._seq_cav_probe_mag(avg_shots=avg_fi_shots)
+            fi_seqs_mag = data_premeasure._seq_cav_probe_mag(avg_shots=avg_fi_shots)
             idx_tbin = np.round(
                     (fi_tbin - fi_seqs_mag.t0) / fi_seqs_mag.dt
                 ).astype(int)
@@ -235,10 +235,12 @@ class Experiment:
 
             # Calculate single fi for each sequence (or array of shots if avg_shots = False)
             fi = np.average(fi_seqs_vals, axis=-1, weights=fi_seqs_mag2_vals)
-        
+
         # Assign to data object
-        return( Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
-                            cref_runs=runs['cref'], spcm_runs=runs['spcm']) )
+        data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
+                            cref_runs=runs['cref'], spcm_runs=runs['spcm'])
+
+        return( data, data_premeasure, data_postmeasure )
             
 class Parameters:
     def __init__(self):
@@ -247,6 +249,7 @@ class Parameters:
         self.t_cav_pulse = None
         self.f0_cav = None
         self.f0_atom = None
+        self.dt = None
         
     def _all_params_defined(self):
         for attr in vars(self):
