@@ -55,8 +55,8 @@ class Experiment:
                    premeasure_interleaved = False, postmeasure = 0,
                    n_warmups = 0, avg_fi_shots = True):
         """
-        Given loaded sequences, preprocess data contained inside and store in
-        expt.data.
+        Given loaded sequences, preprocess data contained inside and return a
+        Data object
 
         Parameters
         ----------
@@ -244,7 +244,6 @@ class Experiment:
 class Parameters:
     def __init__(self):
         self.t_run = None
-        self.t_bin = None
         self.t_drive = None
         self.t_cav_pulse = None
         self.f0_cav = None
@@ -335,7 +334,7 @@ class Data:
         return( Data(self.t, new_cav_runs, new_atom_runs, self.params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
 
     
-    def track_cav_frequency_iq(self, f_demod = None, align = True, avg_sequences = True, \
+    def track_cav_frequency_iq(self, t_bin, f_demod = None, align = True, avg_sequences = True, \
                                ignore_pulse_bins = True, use_cref = True, avg_shots = True):
         """
         IQ demodulates cavity time traces, bins them, and fits their phase(t)
@@ -344,6 +343,8 @@ class Data:
         
         Parameters
         ----------
+        t_bin : float
+            Specifies the size of time bins for measuring the cavity frequency.
         f_demod : float, optional
             Specifies what frequency to demodulate at. If None, f_demod is auto-set
             to self.params.f0_cav. The default is None.
@@ -420,8 +421,8 @@ class Data:
         n_runs = np.prod(phase.shape[:-1])        
         
         # Which is larger: cav pulse time spacing or time bin length?
-        if int(self.params.t_cav_pulse/self.params.t_bin) > 1:
-            n_bin_pts = round( self.params.t_bin/cav_phasor.dt )
+        if int(self.params.t_cav_pulse/self.) > 1:
+            n_bin_pts = round( t_bin/cav_phasor.dt )
 
             # OPTIONAL ARG: Align to pulses
             # DELETED CODE [see v0.5.0]: option use_phase_jumps = False (instead aligns to max voltage in pulse)
@@ -458,10 +459,10 @@ class Data:
             
             # Bin cavity phasor traces
             cav_phase = cav_phasor.phase()
-            cav_bins = cav_phase.bin_trace(self.params.t_bin)
+            cav_bins = cav_phase.bin_trace(t_bin)
                                     
             # Get bin times
-            bin_times = cav_phasor.t[0] + self.params.t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
+            bin_times = cav_phasor.t[0] + t_bin * (0.5 + np.arange(cav_bins.V.shape[-2]))
             
             # Estimate cavity frequency in bins using linear regression
             cav_freq_vals = cav_bins.frequency()
@@ -515,7 +516,7 @@ class Data:
             # wfunc = None
             cav_freq_vals_flat = phase_flat_aligned.frequency(t_bin=t_pulse, wfunc=wfunc)
             
-            n_bin_pulses = int(self.params.t_bin/t_pulse)
+            n_bin_pulses = int(t_bin/t_pulse)
             n_bins = int(n_pulses/n_bin_pulses)
             cav_freq_vals_bins = cav_freq_vals_flat[:,:n_bins*n_bin_pulses] \
                 .reshape((n_runs, n_bins, n_bin_pulses)) \
@@ -524,7 +525,7 @@ class Data:
             # Shape array of frequency values back to (seq, run, t_bin)          
             cav_freq_vals = cav_freq_vals_bins \
                 .reshape(phase.shape[:-1] + (n_bins,))
-            bin_times = cav_phase.t[0] + self.params.t_bin * (0.5 + np.arange(n_bins))
+            bin_times = cav_phase.t[0] + t_bin * (0.5 + np.arange(n_bins))
         
         # If no cavity reference exists, average runs within a sequence
         if not use_cref:
