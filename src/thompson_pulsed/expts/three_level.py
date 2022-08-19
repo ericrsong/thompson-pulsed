@@ -24,7 +24,6 @@ class Experiment:
     """
     def __init__(self, params):
         self.sequences = []
-        self.data = None
         
         if params._all_params_defined():
             self.params = params
@@ -53,7 +52,7 @@ class Experiment:
         
     def preprocess(self, n_seqs = None, load = 'newest', premeasure = 0,
                    premeasure_interleaved = False, postmeasure = 0,
-                   n_warmups = 0, avg_fi_shots = True):
+                   n_warmups = 0, avg_fi_shots = False):
         """
         Given loaded sequences, preprocess data contained inside and return a
         Data object
@@ -84,7 +83,7 @@ class Experiment:
 
         Returns
         -------
-        None.
+        e3l.Data object
         """
         if not self.params:
             raise Exception("Error: need to set experiment parameters!")
@@ -238,8 +237,8 @@ class Experiment:
             fi = np.average(fi_seqs_vals, axis=-1, weights=fi_seqs_mag2_vals)
         
         # Assign to data object
-        self.data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
-                            cref_runs=runs['cref'], spcm_runs=runs['spcm'])
+        return( Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
+                            cref_runs=runs['cref'], spcm_runs=runs['spcm']) )
             
 class Parameters:
     def __init__(self):
@@ -257,7 +256,7 @@ class Parameters:
 
 class Data:
     """
-    Stores preprocessed data. Accessed via the parent Experiment object. 
+    Stores preprocessed data and contains methods by which to process the contained data.
     """
     def __init__(self, t, cav_runs, atom_runs, params, fi=None, fb=None, cref_runs=None, spcm_runs=None):
         self.t = t
