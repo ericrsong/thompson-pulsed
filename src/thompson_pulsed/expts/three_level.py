@@ -193,6 +193,7 @@ class Experiment:
         ####
         # Process premeasure and postmeasure runs
         ####
+        t_bin = 0.5 * 1e-6 # 0.5 us time bins for measuring fi, fb
 
         # Load postmeasure into Data object
         self.has_postmeasure = (postseq['cav'] is not None)
@@ -202,7 +203,7 @@ class Experiment:
         # Process postmeasure. fb.shape = (seq,)
         fb = None
         if self.has_postmeasure:
-            fb_seqs = data_postmeasure.track_cav_frequency_iq(avg_sequences=False)
+            fb_seqs = data_postmeasure.track_cav_frequency_iq(t_bin=t_bin, avg_sequences=False)
             fb_tbin, fb_seqs_vals = fb_seqs.t, fb_seqs.V
 
             # Get phasor magnitudes at t_bin values
@@ -223,7 +224,7 @@ class Experiment:
         # Process premeasure. fi.shape = (seq,)
         fi = None
         if self.has_premeasure:
-            fi_seqs = data_premeasure.track_cav_frequency_iq(avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
+            fi_seqs = data_premeasure.track_cav_frequency_iq(t_bin=t_bin, avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
             fi_tbin, fi_seqs_vals = fi_seqs.t, fi_seqs.V
 
             # Get phasor magnitudes at t_bin values
@@ -423,7 +424,7 @@ class Data:
         n_runs = np.prod(phase.shape[:-1])        
         
         # Which is larger: cav pulse time spacing or time bin length?
-        if int(self.params.t_cav_pulse/self.) > 1:
+        if int(self.params.t_cav_pulse/t_bin) > 1:
             n_bin_pts = round( t_bin/cav_phasor.dt )
 
             # OPTIONAL ARG: Align to pulses
