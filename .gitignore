@@ -29,3 +29,7 @@ pip-delete-this-directory.txt
 
 # Package-specific
 tests/example_data/
+
+# environment
+env/
+.tool-versions
