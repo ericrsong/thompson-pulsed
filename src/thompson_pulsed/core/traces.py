@@ -251,7 +251,7 @@ class Time_Multitrace(MT):
             if (type(dV) != type(None)) and (type(dV) != type(self.V)):
                 raise( TypeError(f"dV must have type {type(None)} or type {type(self.V)} to write to this object. It currently has type {type(dV)}.") )
             if (dV is not None) and (dV.shape != self.V.shape):
-                raise( TypeError(f"dV must have shape {self.V.shape[-1]} along the time axis to write to this object. It currently has shape {dV.shape} along the time axis.") )
+                raise( TypeError(f"dV must have shape {self.V.shape} to write to this object. It currently has shape {dV.shape}.") )
             return( type(self)(self.t, V, dV=dV) )
         return( type(self)(self.t, V) )
 
@@ -286,7 +286,7 @@ class Time_Multitrace(MT):
 
             dV_avg = np.sqrt(np.average((self.V - V_avg[idx])**2, axis=axis, weights=weights))
 
-        return( type(self)(self.t, V_avg, dV=dV_avg) )
+        return( self.set(V_avg, dV=dV_avg) )
 
     def bin_trace(self, t_bin, t0=None):
         """
@@ -385,7 +385,7 @@ class Time_Multitrace(MT):
         new_shape = (np.prod(self.V.shape[:-1]), self.V.shape[-1])
         V_new = np.reshape(self.V, new_shape)
         dV_new = None if (self.dV is None) else (np.reshape(self.dV, new_shape))
-        return( type(self)(self.t, V_new, dV_new) )
+        return( self.set(V_new, dV_new) )
 
     def fft(self, t_pad=None):
         """
@@ -511,7 +511,7 @@ class Time_Multitrace(MT):
         V_avg = np.pad(V_avg_trunc, pad_width_V, mode='edge')
         dV_avg = np.pad(1/np.sqrt(w_trunc), pad_width_V, mode='edge')
         
-        return( type(self)(self.t, V_avg, dV=dV_avg) )
+        return( self.set(V_avg, dV=dV_avg) )
     
     def truncate(self, t_min=None, t_max=None):
         """
