@@ -272,7 +272,30 @@ class Experiment:
                             cref_runs=runs['cref'], spcm_runs=runs['spcm'])
             
 class Parameters:
-    "TODO: Add dtype of the attributes"
+    """
+    Defines experiment data.
+
+    ...
+
+    Attributes
+    ----------
+    t_run: double
+        The length of each shot of experiment.
+    t_drive: double
+        
+    t_cav_pulse: double
+
+    f0_cav: double
+
+    f0_atom: double
+        
+    dt: double
+        Time steps between each data point that oscilloscope acquires. 
+
+
+    Methods
+    ----------
+    """
     def __init__(self):
         self.t_run = None
         self.t_bin = None
