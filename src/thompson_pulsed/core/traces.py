@@ -25,6 +25,28 @@ class Sequence:
     Optionally, a Sequence object may have a trigger array, with the name ``trig``.
     This array is detected and then used to mark indices where a trigger is
     found.
+
+    ...
+
+    Attributes
+    ----------
+    has_triggers : Boolean.
+        If the data has trigger channel.
+    t : 
+        TBD
+    triggers : 1D ndarray or None 
+        has_triggers==True, triggers is a array of indices of time where the 
+        TTL pulses appear (If j is the index for TTL reaches HIGH, triggers
+        records j-1)
+        has_trigger==False, triggers=None
+      
+
+    Methods
+    -------
+    load(file, parser)
+        Generates a ``Sequence`` object by extracting data from a given file using
+        the proper parser function. This is a class method so can be called
+        directly on the class ``Sequence``.
     """
     def __init__(self, t, **kwargs):
         self.t = t
@@ -56,6 +78,8 @@ class Sequence:
         -------
         An instance of ``Sequence`` in the form ``Sequence(t, **data_dict_from_file)``
         """
+        ## data : ndarray
+        ## dataset_names : list
         data, dataset_names = parser(file)
         
         if data.size == 0:
