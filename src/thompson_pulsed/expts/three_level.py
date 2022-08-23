@@ -63,6 +63,7 @@ class Experiment:
         """
         tries = 6
         delay = 0.1
+        # the functionality is really used for the watched dog script
         for i in range(tries):
             try:
                 seq = traces.Sequence.load(file, ni_pci5105)
