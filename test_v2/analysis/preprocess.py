@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.insert(0, "/home/ericsong/Documents/3L/thompson-pulsed/src")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,40 +40,40 @@ option_reload_all = False
 Iterate over sets
 """
 for j in range(len(sds)):
-    sd = sds[j]
-    pkl_file = os.path.join(sd.folder, sd.dset_name + '.pickle')
-    
-    if not os.path.exists(sd.folder):
-    	raise FileNotFoundError("""
-    		Data not found. Make sure you have the right folder!
-    		""")
-            
-    # OPTION: Skip sets which have already been preprocessed, unless told otherwise
-    if os.path.exists(pkl_file) and (not option_reload_all):
-        print(f'Skipping set {sd.dset_name} ({j+1} of {len(sds)}).')
-        continue
-    
-    # Create experiment object for set and preprocess
-    expt = e3l.Experiment(params)
-    for i in range(sd.seq0, sd.seq0 + sd.nseq):
-        file_num = str(i).zfill(sd.zpad)
-        file_name = sd.expt_title + file_num + '.txt'
-        file = os.path.join(folder, file_name)
-    
-        expt.load_sequence(file)
-    
-        print(f'Sequence {i-sd.seq0+1} of {sd.nseq} loaded.')
-    
-    data, premeasure, postmeasure = expt.preprocess(
-        premeasure_interleaved = True, postmeasure = 5, n_warmups = 1)
-    
-    # Bundle up data and pickle
-    pkl_dict = {
-        "data": data,
-        "premeasure": premeasure,
-        "postmeasure": postmeasure,
-        "sd": sd
-    }
-    pickle.dump(pkl_dict, open(pkl_file, 'wb'))
-    
-    print(f'Set {sd.dset_name} ({j+1} of {len(sds)}) preprocessed and pickled.')
+	sd = sds[j]
+	pkl_file = os.path.join(sd.folder, sd.dset_name + '.pickle')
+	
+	if not os.path.exists(sd.folder):
+		raise FileNotFoundError("""
+			Data not found. Make sure you have the right folder!
+			""")
+			
+	# OPTION: Skip sets which have already been preprocessed, unless told otherwise
+	if os.path.exists(pkl_file) and (not option_reload_all):
+		print(f'Skipping set {sd.dset_name} ({j+1} of {len(sds)}).')
+		continue
+	
+	# Create experiment object for set and preprocess
+	expt = e3l.Experiment(params)
+	for i in range(sd.seq0, sd.seq0 + sd.nseq):
+		file_num = str(i).zfill(sd.zpad)
+		file_name = sd.expt_title + file_num + '.txt'
+		file = os.path.join(folder, file_name)
+	
+		expt.load_sequence(file)
+	
+		print(f'Sequence {i-sd.seq0+1} of {sd.nseq} loaded.')
+	
+	data, premeasure, postmeasure = expt.preprocess(
+		premeasure_interleaved = True, postmeasure = 5, n_warmups = 1)
+	
+	# Bundle up data and pickle
+	pkl_dict = {
+		"data": data,
+		"premeasure": premeasure,
+		"postmeasure": postmeasure,
+		"sd": sd
+	}
+	pickle.dump(pkl_dict, open(pkl_file, 'wb'))
+	
+	print(f'Set {sd.dset_name} ({j+1} of {len(sds)}) preprocessed and pickled.')
