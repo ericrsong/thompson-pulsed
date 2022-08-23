@@ -32,14 +32,14 @@ class Sequence:
     ----------
     has_triggers : Boolean.
         If the data has trigger channel.
-    t : 
-        TBD
+    t : 1D ndarray
+        An array of time (in seconds)
     triggers : 1D ndarray or None 
-        has_triggers==True, triggers is a array of indices of time where the 
+        If has_triggers==True, triggers is a array of indices of time where the 
         TTL pulses appear (If j is the index for TTL reaches HIGH, triggers
-        records j-1)
-        has_trigger==False, triggers=None
-      
+        records j-1); if has_trigger==False, triggers=None.
+    cav,atom,trig,cref: 1D ndarray
+        Other attributes that depends on the dataset.
 
     Methods
     -------
@@ -50,6 +50,9 @@ class Sequence:
     """
     def __init__(self, t, **kwargs):
         self.t = t
+        # key: string, eg. "atom", "cavity", or "trigger"
+        # kwargs looks like 
+        # {"atom": 1D ndarray, "cavity": 1D ndarray} in general
         for key in kwargs:
             vars(self)[key] = Time_Multitrace(t, kwargs[key])
 
@@ -78,8 +81,8 @@ class Sequence:
         -------
         An instance of ``Sequence`` in the form ``Sequence(t, **data_dict_from_file)``
         """
-        ## data : ndarray
-        ## dataset_names : list
+        # data : ndarray
+        # dataset_names : list
         data, dataset_names = parser(file)
         
         if data.size == 0:
@@ -138,6 +141,22 @@ class MT:
     """
     Generic multitrace object with a 1D x array and nD y array, where the LAST
     index corresponds to x.
+
+    ...
+
+    Attributes
+    ----------
+    x_attr : str
+        The name of x-axis data
+    y_attr : str
+        The name of y-xais data
+      
+
+    Methods
+    -------
+    chop(tol=10)
+        If there are small real or imaginary components of self.y, chop them
+        off. For instance, 0.25 + 1e-14 * 1j gets transformed to 0.25.
     """
     def __init__(self, X, Y):
         """
@@ -186,6 +205,62 @@ class Time_Multitrace(MT):
     Stores information for multiple time traces. These multiple traces are
     assumed to be packed in a single numpy array of arbitrary dimension, where
     the LAST index corresponds to time.
+
+    ...
+
+    Attributes
+    ----------
+    dV : TODO: what is this?
+        TODO: 
+
+    Methods
+    -------
+    set(V, dV = None)
+        Apply a new V (and dV) to a multitrace object, keeping the time values
+        untouched.
+        
+    average_over(axis)
+        Given a time multitrace and a specific axis, perform a (potentially 
+        weighted) average over that dimension and return a multitrace with one
+        fewer dimension and statistics.
+    
+    bin_trace(t_bin, t0=None)
+        Given a time multitrace and a time t_bin, bins the multiple time traces
+        into subtraces with length t_bin in time. Given a k+1 dimensional
+        multitrace of the form [d1, ..., dk, t], returns a k+2 dimensional
+        multitrace of the form [d1, ..., dk, bin, t].
+
+    binned_average(t_bin, use_weights=True)
+        Assuming an evenly-spaced array, time-bins an array and then averages
+        points within that bin, returning a Time_Multitrace across the full
+        time series with fewer, averaged points.
+
+    collapse()
+        Returns a MT with the same data as self, but with all non-time
+        dimensions collapsed into a single dimension. Reshaping is done with
+        np.reshape(), which maintains dictionary order in the indices.
+
+    fft(t_pad=None)
+        Returns a Frequency Multitrace corresponding to the given time
+        multitrace. Optionally, allows zero padding up to t_pad, which allows
+        one to interpolate the raw fft to a resolution of 1/t_pad. Fundamental
+        Fourier broadening of the spectrum is still limited by the time length
+        of the original array, as expected of time-frequency uncertainty.
+
+    iq_demod(f_demod, filt='butter', order=4, f_cutoff=None, sign=1)
+        Performs an IQ demodulation on the multitrace with frequency f_demod.
+        The scipy function filtfilt applies the given filter in the forward-
+        time direction once, then applies it again in the backwards-time
+        direction. This ensures the next applied filter has no net phase delay
+        at the expense of preserving causality.
+
+    moving_average(t_avg, use_weights=True)
+        Assuming an evenly-spaced array, performs a moving average with window
+        t_avg.
+
+    truncate(t_min=None, t_max=None)
+        Truncates the Time_Multitrace arrays to include only times t such that
+        t_min <= t <= t_max.
     """
     def __init__(self, t, V, dV=None):
         """
@@ -776,6 +851,24 @@ class Frequency_Multitrace(MT):
         return( Time_Multitrace(t, Vt) )
 
 class Frequency_Sequence:
+    """
+    TODO: NOT used for now
+
+    ...
+
+    Attributes
+    ----------
+    f : 
+            
+
+    Methods
+    -------
+    load_sequence(file, parser)
+        Generates a Frequency_Sequence class by extracting data from a give
+        file using the proper parser function. This is a class method so can
+        be called directly on the class Frequency_Sequence.
+
+    """  
     def __init__(self, f, **kwargs):
         self.f = f
         for key in kwargs:
