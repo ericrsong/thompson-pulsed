@@ -151,6 +151,12 @@ class MT:
         The name of x-axis data
     y_attr : str
         The name of y-xais data
+    *x_attr : 1D np.array
+        Note the attribute name here is the value of x_attr.
+        The actual x array data.
+    *y_attr : nD np.array
+        Note the attribute name here is the value of y_attr.
+        The actual y array data.
       
 
     Methods
@@ -211,8 +217,19 @@ class Time_Multitrace(MT):
 
     Attributes
     ----------
-    dV : TODO: what is this?
-        TODO: 
+    Attributes from base class
+    x_attr : str
+        The name of x-axis data
+    y_attr : str
+        The name of y-xais data
+    t : 1D np.array
+        The actual x array data.
+    V : nD np.array
+        The actual y array data.
+    
+    Additional attributes
+    dV: nD np.array
+        Uncertainty in V. dV.shape should be the same as V.shape.
 
     Methods
     -------
