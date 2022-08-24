@@ -38,7 +38,7 @@ class Sequence:
         If has_triggers==True, triggers is a array of indices of time where the 
         TTL pulses appear (If j is the index for TTL reaches HIGH, triggers
         records j-1); if has_trigger==False, triggers=None.
-    cav,atom,trig,cref: 1D ndarray
+    cav,atom,trig,cref: Time_Multitrace
         Other attributes that depends on the dataset.
 
     Methods
@@ -108,6 +108,7 @@ class Sequence:
                     )
             kwargs[dataset_name] = data[i]
         
+        # it calls default constructor again
         return( cls(t, **kwargs) )
     
     def _mark_triggers(self, slope=1):
