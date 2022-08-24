@@ -27,13 +27,13 @@ class Experiment:
     Attributes
     ----------
     has_postmeasure : bool
-        Whether the sequence has the postmeasure cavity probe.
+        Whether the sequence has the cavity probe postmeasure .
     has_premeasure : bool
-        Whether the sequence has the premeasure cavity probe.
+        Whether the sequence has the cavity probe premeasure.
     params : Parameters (Class)
         Experimental Parameters.
     sequences: list of Sequence (Class)
-        i.e. [Sequence 1, Sequence 2, Sequence 3]
+        i.e. [Sequence 1, Sequence 2, Sequence 3,...]
         Each sequence corresponds to a txt file each loading sequence produces.
     
 
@@ -320,23 +320,23 @@ class Data:
     Attributes
     ----------
     atom_runs : Time_Multitrace (Class)
-        TBD
+        Atomic probe data.
     cav_runs : Time_Multitrace (Class)
-        TBD
+        Cavity probe data.
     cref_runs : Time_Multitrace (Class)
-        TBD
+        RF reference tone data [for calibration of cavity probe phase].
     fb : ndarray of shape (seq,)
-        Bare cavity frequency
+        Bare cavity frequency.
     fi : ndarray of shape (seq,)
         Initial cavity frequency with all atoms in the ground states.
     params : Parameters (Class)
-        Experimental Parameters
+        Experimental Parameters.
     spcm_runs : Time_Multitrace (Class)
         TO BE IMPLEMENTED.
     t : ndarray
         Time coodinates of dynamics of one shot.
 
-    Methods
+    
     -------
     subset(idx)
         Returns a Data object which is sliced along the sequence axis with
