@@ -26,18 +26,16 @@ class Experiment:
 
     Attributes
     ----------
-    data : Data(Class)
-        a formatted string to print out what the animal says
-    has_postmeasure : str
-        the name of the animal
-    params : str
-        the sound that the animal makes
-    postmeasure : Data(Class)
-        the number of legs the animal has (default 4)
-    premeasure : Data(Class)
-        TBD
-    sequences: list of Sequence
-        A list of Sequence (Class) that is loaded.        
+    has_postmeasure : bool
+        Whether the sequence has the postmeasure cavity probe.
+    has_premeasure : bool
+        Whether the sequence has the premeasure cavity probe.
+    params : Parameters (Class)
+        Experimental Parameters.
+    sequences: list of Sequence (Class)
+        i.e. [Sequence 1, Sequence 2, Sequence 3]
+        Each sequence corresponds to a txt file each loading sequence produces.
+    
 
     Methods
     -------
@@ -273,7 +271,32 @@ class Experiment:
         return( data, data_premeasure, data_postmeasure )
             
 class Parameters:
-    "TODO: Add dtype of the attributes"
+    """
+    Contains the experimental parameters
+
+    ...
+
+    Attributes
+    ----------
+    t_run : float
+        Length of each shot (s)
+    t_drive : float
+        Duration of Rabi drive (s)
+    t_cav_pulse : float
+        Cycle time of cavity probe, i.e. the cavity is whacked every 
+        t_cav_pulse (s).
+    f0_cav : float
+        Effective "osillation" frequency (Hz) that oscilloscope acquires for 
+        cavity probe.
+    f0_atom : float
+        Effective "osillation" frequency (Hz) that oscilloscope acquires for 
+        atomic probe.
+    dt : float  
+        Time difference (s) between each data point that scope samples.
+    Methods
+    -------
+    None.
+    """
     def __init__(self):
         self.t_run = None
         self.t_drive = None
@@ -302,24 +325,23 @@ class Data:
         TBD
     cref_runs : Time_Multitrace (Class)
         TBD
-    fb : 
-        TBD
-    fi :
-        TBD
-    params :
-        TBD
+    fb : ndarray of shape (seq,)
+        Bare cavity frequency
+    fi : ndarray of shape (seq,)
+        Initial cavity frequency with all atoms in the ground states.
+    params : Parameters (Class)
+        Experimental Parameters
     spcm_runs : Time_Multitrace (Class)
-        TBD
-    t : 
-        TBD
+        TO BE IMPLEMENTED.
+    t : ndarray
+        Time coodinates of dynamics of one shot.
 
     Methods
     -------
-    _seq_cav_probe_mag(f_demod = None, avg_shots=True)
-        TBD
     subset(idx)
         Returns a Data object which is sliced along the sequence axis with
         the given 1D numpy array idx.
+
     track_cav_frequency_iq(f_demod = None, align = True, avg_sequences = True,
                                ignore_pulse_bins = True, use_cref = True, 
                                avg_shots = True)
@@ -330,6 +352,7 @@ class Data:
     demod_atom_trace(t_align=None, collapse=True)
         IQ demodulates atom time traces and phase-aligns them at a specified
         time.
+
     avg_spcm_traces
         NOT IMPLEMENTED.
 
