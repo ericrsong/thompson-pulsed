@@ -171,6 +171,8 @@ class Experiment:
                     i_run = min(i_run, attr_MT.V.shape[-1] - seq.triggers[-1])
                     
                     # Extract runs from the single sequence using triggers as markers
+                    # Here different shots in the same (loading) sequence is 
+                    # stacked together
                     seq_runs = np.array(
                         [attr_MT.V[..., trig:trig+i_run] for trig in seq.triggers]
                         )
