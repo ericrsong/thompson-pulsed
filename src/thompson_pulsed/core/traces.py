@@ -791,11 +791,9 @@ class MT_Phase(Time_Multitrace):
 
     Methods
     -------
-    phase(unwrap=True)
-        Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
-        phases.
-    mag()
-        Generates a Time_Multitrace of the phasor magnitudes.
+    frequency(t_bin=None, t0=None, wfunc=None)
+        Calculates a linear regression slope in O(n) time, using a closed-form
+        formula for least-squares that assumes evenly sampled points in time. 
     """
 
     def __init__(self, t, V, dV=None, unwrap=True):
