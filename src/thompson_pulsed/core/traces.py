@@ -670,6 +670,36 @@ class MT_Phasor(Time_Multitrace):
     A multitrace object built off of ``Time_Multitrace`` which represents
     a time series of complex phasors, carrying with it phasor-specific
     class methods.
+
+    ...
+
+    Attributes
+    ----------
+    Attributes from base class
+    x_attr : str
+        The name of x-axis data
+    y_attr : str
+        The name of y-xais data
+    t : 1D np.array
+        The actual x array data.
+    V : nD np.array
+        The actual y array data.
+    dV: nD np.array
+        Uncertainty in V. dV.shape should be the same as V.shape.
+
+    Methods
+    -------
+    phase(unwrap=True)
+        Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
+        phases.
+    mag()
+        Generates a Time_Multitrace of the phasor magnitudes.
+    mag2()
+        Generates a Time_Multitrace of the phasor magnitudes squared.
+    real()
+        Generates a Time_Multitrace of the real components of the phasors.
+    imag()
+        Generates a Time_Multitrace of the imaginary components of the phasors.
     """
     
     def phase(self, unwrap=True):
@@ -742,6 +772,30 @@ class MT_Phase(Time_Multitrace):
     A multitrace object built off of ``Time_Multitrace`` which represents
     a time series of phase values, carrying with it phase-specific
     class methods.
+
+    ...
+
+    Attributes
+    ----------
+    Attributes from base class
+    x_attr : str
+        The name of x-axis data
+    y_attr : str
+        The name of y-xais data
+    t : 1D np.array
+        The actual x array data.
+    V : nD np.array
+        The actual y array data.
+    dV: nD np.array
+        Uncertainty in V. dV.shape should be the same as V.shape.
+
+    Methods
+    -------
+    phase(unwrap=True)
+        Given a MT_Phasor trace or phasors, generates an MT_Phase trace of
+        phases.
+    mag()
+        Generates a Time_Multitrace of the phasor magnitudes.
     """
 
     def __init__(self, t, V, dV=None, unwrap=True):
