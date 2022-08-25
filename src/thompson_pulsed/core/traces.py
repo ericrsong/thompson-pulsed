@@ -793,6 +793,8 @@ class MT_Phase(Time_Multitrace):
             return( self.bin_trace(t_bin, t0=t0).frequency(t_bin=None, wfunc=wfunc) )
         elif wfunc is None:
             # No weights specified. Assume equal weighting
+            # linear regression assuming the t interval is equally spaced
+            # and y data has 0 mean.
             y = self.V
             n = y.shape[-1]
             x = np.arange(1, n+1) - (n+1)/2
