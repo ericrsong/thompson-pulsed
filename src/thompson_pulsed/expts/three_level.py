@@ -485,7 +485,9 @@ class Data:
             
         # Demodulate cavity data
         cav_runs = self.cav_runs
-        cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
+        # cav_runs.V has shape (seq, shots, t)
+        cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True) 
+        # cav_phasor_raw.V has shape (seq, shots, t)
         cav_phasor_raw = cav_runs.iq_demod(f_demod)
 
         # Check for cavity phase reference trace. If it exists, align cavity phasors with this data
@@ -516,7 +518,8 @@ class Data:
         phase = cav_phase.V
         
         t_pulse = self.params.t_cav_pulse
-        n_pulse_pts = round( t_pulse/cav_phase.dt )
+        # how many time points does each cavity whack contain.
+        n_pulse_pts = round( t_pulse/cav_phase.dt ) 
         n_pts = phase.shape[-1]
         n_runs = np.prod(phase.shape[:-1])        
         
@@ -530,7 +533,7 @@ class Data:
                 # Collapse into trace of t_pulse
                 phase_diff = np.concatenate((np.zeros( phase.shape[:-1] + (1,) ),
                                          phase[...,1:]-phase[...,:-1]), axis = -1)
-                n_pulses_temp = int(n_pts/n_pulse_pts)
+                n_pulses_temp = int(n_pts/n_pulse_pts) # floor function
                 pulse_finder = np.reshape(
                     phase_diff[..., :n_pulses_temp*n_pulse_pts]**2,
                     (n_runs*n_pulses_temp, n_pulse_pts)
