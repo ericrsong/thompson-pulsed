@@ -41,3 +41,4 @@ cheatsheet.txt
 # test data
 *.txt
 *.pickle
+*.ipynb
