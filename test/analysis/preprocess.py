@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-sys.path.insert(0, "/home/ericsong/Documents/3L/thompson-pulsed/src")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,7 +39,6 @@ Iterate over sets
 """
 for j in range(len(sds)):
 	sd = sds[j]
-	# define the output file name
 	pkl_file = os.path.join(sd.folder, sd.dset_name + '.pickle')
 	
 	if not os.path.exists(sd.folder):
@@ -65,7 +62,6 @@ for j in range(len(sds)):
 	
 		print(f'Sequence {i-sd.seq0+1} of {sd.nseq} loaded.')
 	
-	# data, premeasure, postmeasure are classes: three_level.expt.Data
 	data, premeasure, postmeasure = expt.preprocess(
 		premeasure_interleaved = True, postmeasure = 5, n_warmups = 1)
 	
