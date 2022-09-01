@@ -33,7 +33,3 @@ tests/example_data/
 # environment
 env/
 .tool-versions
-
-# test data file
-*.txt
-*.pickle
