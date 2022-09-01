@@ -575,16 +575,22 @@ class Time_Multitrace(MT):
         # Generate 4th order Butterworth filter with cutoff at demod frequency
         if not f_cutoff:
             f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
-        f_nyquist = 1/(2 * self.dt)
-        wn = f_cutoff / f_nyquist
-        n = order
-        # TODO: give option to use different filter
-        b,a = signal.butter(n, wn)
         
-        V_x = signal.filtfilt(b,a, self.V*LO_x)
-        V_y = signal.filtfilt(b,a, self.V*LO_y)
-
-        return( MT_Phasor(self.t, V_x + sign * 1j * V_y) )
+        if filt == "butter":
+            f_nyquist = 1/(2 * self.dt)
+            wn = f_cutoff / f_nyquist
+            n = order
+            # TODO: give option to use different filter
+            b,a = signal.butter(n, wn)
+            
+            V_x = signal.filtfilt(b,a, self.V*LO_x)
+            V_y = signal.filtfilt(b,a, self.V*LO_y)
+            V = V_x + sign * 1j * V_y
+        elif filt == "wall":
+            fft  = Time_Multitrace(self.t, self.V * (LO_x + sign * 1j * LO_y)).fft()
+            fft_trunc = Frequency_Multitrace(fft.f, fft.V*(np.abs(fft.f) <= f_cutoff))
+            V = fft_trunc.ifft().V
+        return( MT_Phasor(self.t, V) )
     
     def moving_average(self, t_avg, use_weights=True):
         """

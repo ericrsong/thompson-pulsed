@@ -386,7 +386,7 @@ class Data:
         # Demodulate cavity data
         cav_runs = self.cav_runs
         cav_runs.V -= np.mean(cav_runs.V, axis=-1, keepdims=True)
-        cav_phasor_raw = cav_runs.iq_demod(f_demod)
+        cav_phasor_raw = cav_runs.iq_demod(f_demod, filt='wall', f_cutoff=10 * 1e6)
 
         # Check for cavity phase reference trace. If it exists, align cavity phasors with this data
         if (self.cref_runs is not None) and use_cref:
