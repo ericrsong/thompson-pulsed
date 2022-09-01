@@ -21,33 +21,6 @@ Define object classes for experiment
 class Experiment:
     """
     Root object of a particular instance of the experiment.
-
-    ...
-
-    Attributes
-    ----------
-    data : Data(Class)
-        a formatted string to print out what the animal says
-    has_postmeasure : str
-        the name of the animal
-    params : str
-        the sound that the animal makes
-    postmeasure : Data(Class)
-        the number of legs the animal has (default 4)
-    premeasure : Data(Class)
-        TBD
-    sequences: list of Sequence
-        A list of Sequence (Class) that is loaded.        
-
-    Methods
-    -------
-    load_sequence(file)
-        Loads a text file from a single sequence into the experiment.
-    preprocess(n_seqs = None, load = 'newest', premeasure = 0,
-                   premeasure_interleaved = False, postmeasure = 0,
-                   n_warmups = 0, avg_fi_shots = True)
-        Given loaded sequences, preprocess data contained inside and store in
-        expt.data.
     """
     def __init__(self, params):
         self.sequences = []
@@ -228,7 +201,6 @@ class Experiment:
                             if self.has_postmeasure else None
 
         # Process postmeasure. fb.shape = (seq,)
-        # bare cavity frequency
         fb = None
         if self.has_postmeasure:
             fb_seqs = data_postmeasure.track_cav_frequency_iq(t_bin=t_bin, avg_sequences=False)
@@ -250,7 +222,6 @@ class Experiment:
                             if self.has_premeasure else None
         
         # Process premeasure. fi.shape = (seq,)
-        # initial cavity frequency
         fi = None
         if self.has_premeasure:
             fi_seqs = data_premeasure.track_cav_frequency_iq(t_bin=t_bin, avg_sequences=False, use_cref=avg_fi_shots, avg_shots=avg_fi_shots)
@@ -269,11 +240,10 @@ class Experiment:
         # Assign to data object
         data = Data(t, runs['cav'], runs['atom'], self.params, fi=fi, fb=fb, \
                             cref_runs=runs['cref'], spcm_runs=runs['spcm'])
-            
+
         return( data, data_premeasure, data_postmeasure )
             
 class Parameters:
-    "TODO: Add dtype of the attributes"
     def __init__(self):
         self.t_run = None
         self.t_drive = None
@@ -290,49 +260,7 @@ class Parameters:
 
 class Data:
     """
-    Stores preprocessed data. Accessed via the parent Experiment object. 
-
-    ...
-
-    Attributes
-    ----------
-    atom_runs : Time_Multitrace (Class)
-        TBD
-    cav_runs : Time_Multitrace (Class)
-        TBD
-    cref_runs : Time_Multitrace (Class)
-        TBD
-    fb : 
-        TBD
-    fi :
-        TBD
-    params :
-        TBD
-    spcm_runs : Time_Multitrace (Class)
-        TBD
-    t : 
-        TBD
-
-    Methods
-    -------
-    _seq_cav_probe_mag(f_demod = None, avg_shots=True)
-        TBD
-    subset(idx)
-        Returns a Data object which is sliced along the sequence axis with
-        the given 1D numpy array idx.
-    track_cav_frequency_iq(f_demod = None, align = True, avg_sequences = True,
-                               ignore_pulse_bins = True, use_cref = True, 
-                               avg_shots = True)
-        IQ demodulates cavity time traces, bins them, and fits their phase(t)
-        with a linear regression to estimate instantaneous frequency. Multiple
-        shots give statistics on these bins.
-
-    demod_atom_trace(t_align=None, collapse=True)
-        IQ demodulates atom time traces and phase-aligns them at a specified
-        time.
-    avg_spcm_traces
-        NOT IMPLEMENTED.
-
+    Stores preprocessed data and contains methods by which to process the contained data.
     """
     def __init__(self, t, cav_runs, atom_runs, params, fi=None, fb=None, cref_runs=None, spcm_runs=None):
         self.t = t
