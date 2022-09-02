@@ -379,6 +379,17 @@ class Data:
             if (spcm_runs is not None) else None
 
     def _seq_cav_probe_mag(self, f_demod = None, avg_shots=True):
+        """
+        Compute the amplitude of the demodulated phasor (Time_Multitrace).
+        Returns in (seq, t) if avg_shots is True, and (seq, run, t) otherwise.
+
+        Parameters
+        ----------
+        f_demod : float, optional
+            Frequency to demodulate signal by. Units are period units in t. 
+        avg_shots : boolean, optional
+            Specifies whether or not to compute the average of the magnitude.
+        """
         if self.cav_runs is None:
             raise Exception('cav_runs was not set!')
         
