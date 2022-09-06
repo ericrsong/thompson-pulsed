@@ -821,6 +821,30 @@ class Frequency_Multitrace(MT):
     Stores information for multiple frequency traces. These multiple traces are
     assumed to be packed in a single numpy array of arbitrary dimension, where
     the LAST index corresponds to frequency.
+
+    ...
+
+    Attributes
+    ----------
+    Attributes from base class
+    x_attr : str
+        The name of x-axis data
+    y_attr : str
+        The name of y-xais data
+    f : 1D np.array
+        The actual x array data.
+    V : nD np.array
+        The actual y array data.
+    
+    Additional attributes
+    dV: nD np.array
+        Uncertainty in V. dV.shape should be the same as V.shape.
+
+    Methods
+    -------
+    ifft()
+        Returns a Time Multitrace corresponding to the given frequency
+        multitrace.
     """
     def __init__(self, f, V, dV=None):
         # Generate MT with attributes f, V
