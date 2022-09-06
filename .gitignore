@@ -29,3 +29,15 @@ pip-delete-this-directory.txt
 
 # Package-specific
 tests/example_data/
+
+# random
+test/*
+test_v2/*
+cheatsheet.txt
+.tool-versions
+env/*
+
+# test data
+*.txt
+*.pickle
+*.ipynbs
