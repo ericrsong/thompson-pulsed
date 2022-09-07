@@ -41,6 +41,60 @@ class SetDef():
 class Dataset():
     """
     Object to contain processing methods and processed data
+
+    ...
+
+    Attributes
+    ----------
+    data : Data
+        Actual data for the cQED experiment
+    premeasure: Data
+        Data for measure the cavity frequency when all atoms are in 
+        the ground state.        
+    postmeasure : Data
+        Data for measure the bare cavity frequency (i.e. no atoms)
+    sd: SetDef
+        Metadata about the dataset
+    params: Parameters
+        Parameters about a dataset
+    splus: Time_Multitrace
+        S^+ Time traces
+    splus_sp: Time_Multitrace
+        Expected behavior for S^+ time traces considering decoherance effect.
+    splus_sp3: Time_Multitrace
+        Expected behavior for S^+ time traces considering decoherance effect 
+        with temperature effect from all 3 axis. 
+    splus_longdecay : Time_Multitrace
+        For some kind of fitting of S^+ trace.
+    splus_longdecay_full : Time_Multitrace
+        For some kind of fitting of S^+ trace.
+    splus_fft : Frequency_Multitrace
+        Find the fft of S^+ trace.
+    M_emitted : Time_Multitrace
+        Find the number of emitted photons.
+    Omega0 : Time_Multitrace
+
+    cav_probe_shift : Time_Multitrace
+        cav_probe_shift.V is a 1D  array
+        Cavity frequency shift as a function of time.
+    cav_probe_N : Time_Multitrace
+        cav_probe_shift.V is a 1D  array
+        Time depedence of atom number inferred from the cavity probe.
+    cav_f0 : np.float64
+        Bare cavity frequency (with all atoms in the ground states) for a set.
+        
+    Methods
+    -------
+    process_data(t_bin, 
+                    shots_used_per_seq = None, 
+                    include_pulse_in_traces = False,
+                    use_mag2_average = True,
+                    plot_mag2 = True,
+                    assert_chiN = None)
+        From postmeasure, calculate Rabi frequency, total drive phase, 
+        and pulse length
+    
+    get_label(param_type)
     """
     def __init__(self, folder, dset_name,
                  t_bin = 0.5 * 1e-6, **kwargs):
@@ -144,12 +198,15 @@ class Dataset():
         """
         Cavity probe and estimate of ND
         """
+        # type(cav_freqs) = Time_Multitrace
+        # cav_freqs.V.shape = (458,)
         cav_freqs = self.data.track_cav_frequency_iq(t_bin)
 
         cav_freq_shift = cav_freqs.V
-        dt_freq_avg = 2.5e-6
+        # Fixed time window to get the cavity frequency f_0
+        dt_freq_avg = 2.5e-6 # (second)
         n0_bins = int(dt_freq_avg / t_bin)
-        f0 = np.average(cav_freqs.V[1:n0_bins+1])
+        f0 = np.average(cav_freq_shift[1:n0_bins+1])
         print(f'f0 = {round(f0/1e3)} kHz')
 
         # chi N dependent values
