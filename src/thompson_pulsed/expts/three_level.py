@@ -477,6 +477,9 @@ class Data:
             Specifies whether to apply phase corrections to the cavity phasors
             using the experiment's cavity reference RF data, if it exists.
             Default is True.
+        avg_shots : boolean, optional
+            Specifies whether to average the frequency between shots. Default
+            is True.
 
         Returns
         -------
