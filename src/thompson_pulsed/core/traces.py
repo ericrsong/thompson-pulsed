@@ -420,7 +420,8 @@ class Time_Multitrace(MT):
 
         return( Frequency_Multitrace(f, Vf) )
     
-    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None, sign=1):
+    def iq_demod(self, f_demod, filt='butter', order=4, f_cutoff=None, sign=1,
+                        use_filter = True):
         """
         Performs an IQ demodulation on the multitrace with frequency f_demod.
         The scipy function filtfilt applies the given filter in the forward-
@@ -455,17 +456,21 @@ class Time_Multitrace(MT):
         else:
             raise TypeError("f_demod must be number or ndarray")
         
-        # Generate 4th order Butterworth filter with cutoff at demod frequency
-        if not f_cutoff:
-            f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
-        f_nyquist = 1/(2 * self.dt)
-        wn = f_cutoff / f_nyquist
-        n = order
-        # TODO: give option to use different filter
-        b,a = signal.butter(n, wn)
-        
-        V_x = signal.filtfilt(b,a, self.V*LO_x)
-        V_y = signal.filtfilt(b,a, self.V*LO_y)
+        if use_filter:
+            # Generate 4th order Butterworth filter with cutoff at demod frequency
+            if not f_cutoff:
+                f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
+            f_nyquist = 1/(2 * self.dt)
+            wn = f_cutoff / f_nyquist
+            n = order
+            # TODO: give option to use different filter
+            b,a = signal.butter(n, wn)
+            
+            V_x = signal.filtfilt(b,a, self.V*LO_x)
+            V_y = signal.filtfilt(b,a, self.V*LO_y)
+        else:
+            V_x = self.V*LO_x
+            V_y = self.V*LO_y
 
         return( MT_Phasor(self.t, V_x + sign * 1j * V_y) )
     
