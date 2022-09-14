@@ -460,11 +460,12 @@ class Time_Multitrace(MT):
             raise TypeError("f_demod must be number or ndarray")
         
         if use_filter:
+            # find cutoff frequency
+            if not f_cutoff:
+                f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
+                
             if filt == "butter":
                 # Generate 4th order Butterworth filter with cutoff at demod frequency
-                if not f_cutoff:
-                    f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
-
                 f_nyquist = 1/(2 * self.dt)
                 wn = f_cutoff / f_nyquist
                 n = order
