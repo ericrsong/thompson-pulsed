@@ -332,7 +332,54 @@ class Data:
 
         return( Data(self.t, new_cav_runs, new_atom_runs, self.params, fi=new_fi, fb=new_fb, cref_runs=new_cref_runs) )
 
-    
+
+    def correct_phase_jump(self, tbin, f_demod = None):
+        """
+        Only works for data right now. data_premeasure, or data_postmeasure 
+        does not apply. 
+        Returns cavity probe phasor with phase jump corrected.
+        """
+        if self.cav_runs is None:
+            raise Exception('cav_runs was not set!')
+
+        # Check for cavity phase reference trace. 
+        if self.cref_runs is None:
+            raise Exception('cref is not Defined!')
+
+        # OPTIONAL ARG: Pull f_demod if not specified
+        if f_demod is None:
+            f_demod = self.params.f0_cav
+
+        cref_phasor = self.cref_runs.iq_demod(f_demod)
+        cref_mag2_raw = cref_phasor.mag().V**2
+        cref_mag2_max = np.max(cref_mag2_raw, axis=-1)
+        threshold_filter = (cref_mag2_raw > 0.5 * cref_mag2_max[...,None]).astype(int)
+
+        # use circular mean instead to extract the phase information
+        # ref: https://en.wikipedia.org/wiki/Circular_mean
+        cref_phase_real = cref_phasor.V.real
+        cref_phase_imag = cref_phasor.V.imag
+
+        # throw away point have low signal to noise
+        cref_phase_real *= threshold_filter
+        cref_phase_imag *= threshold_filter
+
+        cref_phase_real_avg = np.average(cref_phase_real, axis=-1)
+        cref_phase_imag_avg = np.average(cref_phase_imag, axis=-1)
+
+        # cref_avg_phase.shape = (seqs, shots)
+        cref_avg_phase = np.angle(cref_phase_real_avg + 1j * cref_phase_imag_avg) % (2 * np.pi)
+
+        # Correct cavity phasors and average phasors within single sequences
+        # cav_phasor_corr_V = cav_phasor_raw.V * np.exp(-1j * cref_avg_phase[..., None])
+        cav_phasor_corr_V = self.cav_runs.V * np.exp(-1j * cref_avg_phase[..., None])
+        cav_phasor = tp.MT_Phasor(self.cav_runs.t,
+                                cav_phasor_corr_V)
+        
+        # Return a MT_Phasor object
+        return( cav_phasor )
+
+
     def track_cav_frequency_iq(self, t_bin, f_demod = None, align = True, avg_sequences = True, \
                                ignore_pulse_bins = True, use_cref = True, avg_shots = True):
         """
