@@ -440,6 +440,9 @@ class Time_Multitrace(MT):
         f_cutoff : float, optional
             Describes the cutoff frequency of the filter. If None, function
             assumes f_cutoff to be f_demod. The default is None.
+        use_filter : boolean, optional
+            If true, must specify filt = 'butter' or 'wall'. If false, it 
+            overwrites the option of filt. 
 
         Returns
         -------
@@ -457,22 +460,34 @@ class Time_Multitrace(MT):
             raise TypeError("f_demod must be number or ndarray")
         
         if use_filter:
-            # Generate 4th order Butterworth filter with cutoff at demod frequency
-            if not f_cutoff:
-                f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
-            f_nyquist = 1/(2 * self.dt)
-            wn = f_cutoff / f_nyquist
-            n = order
-            # TODO: give option to use different filter
-            b,a = signal.butter(n, wn)
-            
-            V_x = signal.filtfilt(b,a, self.V*LO_x)
-            V_y = signal.filtfilt(b,a, self.V*LO_y)
+            if filt == "butter":
+                # Generate 4th order Butterworth filter with cutoff at demod frequency
+                if not f_cutoff:
+                    f_cutoff = f_demod if type(f_demod) != np.ndarray else f_demod[(0,)*(self.dim-1)]
+
+                f_nyquist = 1/(2 * self.dt)
+                wn = f_cutoff / f_nyquist
+                n = order
+                # TODO: give option to use different filter
+                b,a = signal.butter(n, wn)
+                
+                V_x = signal.filtfilt(b,a, self.V*LO_x)
+                V_y = signal.filtfilt(b,a, self.V*LO_y)
+                V = V_x + sign * 1j * V_y
+            # filter with a hard-wall cutoff
+            elif filt == "wall":
+                fft  = Time_Multitrace(self.t, self.V * (LO_x + sign * 1j * LO_y)).fft()
+                fft_trunc = Frequency_Multitrace(fft.f, fft.V*(np.abs(fft.f) <= f_cutoff))
+                V = fft_trunc.ifft().V
+            else:
+                raise Exception("filter is not specified")
         else:
             V_x = self.V*LO_x
             V_y = self.V*LO_y
+            V = V_x + sign * 1j * V_y
 
-        return( MT_Phasor(self.t, V_x + sign * 1j * V_y) )
+        return( MT_Phasor(self.t, V) )
+        
     
     def moving_average(self, t_avg, use_weights=True):
         """
